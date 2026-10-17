@@ -1,0 +1,14 @@
+{
+  "search.label": "搜索物理图谱",
+  "pagefind.clear_search": "清空",
+  "pagefind.load_more": "加载更多结果",
+  "pagefind.search_label": "搜索物理图谱",
+  "pagefind.filters_label": "筛选",
+  "pagefind.zero_results": "没有找到“[SEARCH_TERM]”的相关内容",
+  "pagefind.many_results": "找到 [COUNT] 条相关结果",
+  "pagefind.one_result": "找到 [COUNT] 条相关结果",
+  "pagefind.alt_search": "没有找到“[SEARCH_TERM]”，以下是“[DIFFERENT_TERM]”的结果",
+  "pagefind.search_suggestion": "没有找到“[SEARCH_TERM]”，请试试以下关键词：",
+  "pagefind.searching": "正在搜索“[SEARCH_TERM]”…",
+  "heading.anchorLabel": "跳转到“{{title}}”"
+}

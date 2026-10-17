@@ -1,0 +1,11 @@
+---
+import DefaultSidebar from '@astrojs/starlight/components/Sidebar.astro';
+import CatalogData from './CatalogData.astro';
+---
+<div class="atlas-sidebar-links"><DefaultSidebar /></div>
+<section class="position-navigator" aria-label="学习位置导览" data-pagefind-ignore>
+  <div class="navigator-title"><strong>学习位置导览</strong><span>⌖</span></div>
+  <div data-atlas-mini></div>
+</section>
+<CatalogData />
+<script>import '../scripts/atlas-workbench';</script>

@@ -1,0 +1,11 @@
+---
+import { getCollection } from 'astro:content';
+import { sitePath } from '../lib/paths';
+import { categories } from '../data/categories';
+const pages = await getCollection('docs');
+const countNotes = (id: string) => pages.filter(p => p.id.startsWith(id + '/') && !p.id.endsWith('/index')).length;
+---
+<section class="knowledge-section" aria-labelledby="知识地图">
+  <div class="section-heading"><div><p class="eyebrow">EXPLORE THE ATLAS</p><h2 id="知识地图">知识地图<span>按领域，建立你的物理直觉</span></h2></div><span class="section-count">06 个领域 / {categories.reduce((sum, c) => sum + countNotes(c.id), 0)} 篇笔记</span></div>
+  <div class="knowledge-grid">{categories.map(c => <a class="knowledge-card" href={sitePath(c.id + '/')}><div class="card-top"><span>{c.n} / {c.en}</span><span class="card-arrow" aria-hidden="true">↗</span></div><div class="card-formula" aria-hidden="true">{c.formula}</div><h3>{c.title}</h3><p>{c.text}</p><div class="card-bottom"><span>{c.tags}</span><b>{countNotes(c.id) ? `${countNotes(c.id)} 篇` : '待收录'}</b></div></a>)}</div>
+</section>

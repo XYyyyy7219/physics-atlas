@@ -1,0 +1,28 @@
+---
+import { sitePath } from '../lib/paths';
+import DefaultHero from '@astrojs/starlight/components/Hero.astro';
+const isHome = Astro.url.pathname.replace(/\/$/, '') === sitePath().replace(/\/$/, '');
+---
+{isHome ? (
+<section class="atlas-hero" aria-labelledby="_top">
+  <div class="hero-copy">
+    <p class="eyebrow"><span></span> 一本持续生长的物理知识库</p>
+    <h1 id="_top" data-page-title>从一个问题出发，<br />看见物理的<span>全貌。</span></h1>
+    <p class="hero-description">把零散的概念连成清晰的图谱。<br />在定义、推导与例题之间，找到理解世界的路径。</p>
+    <div class="hero-actions"><a class="primary-link" href={sitePath('library/')}>探索知识库 <span aria-hidden="true">↗</span></a><a class="secondary-link" href={sitePath('learning-map/')}>打开学习地图 <span aria-hidden="true">→</span></a></div>
+    <p class="hero-note">中文讲解 <i>·</i> 公式推导 <i>·</i> 循序渐进</p>
+  </div>
+  <div class="hero-figure" aria-hidden="true">
+    <div class="figure-label">THE BEAUTY OF CONNECTIONS <span>FIG. 01</span></div>
+    <svg viewBox="0 0 460 300" fill="none">
+      <defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".8" fill="currentColor" opacity=".16"/></pattern></defs>
+      <rect x="0" y="0" width="460" height="300" fill="url(#dots)"/>
+      <g stroke="currentColor" opacity=".15"><path d="M230 10v280M35 150h390" stroke-dasharray="3 7"/><circle cx="230" cy="150" r="105"/><circle cx="230" cy="150" r="59" stroke-dasharray="2 7"/></g>
+      <g stroke="currentColor" stroke-width="1.25"><ellipse cx="230" cy="150" rx="157" ry="56" transform="rotate(-28 230 150)"/><ellipse cx="230" cy="150" rx="157" ry="56" transform="rotate(32 230 150)"/><ellipse cx="230" cy="150" rx="139" ry="53" transform="rotate(91 230 150)"/></g>
+      <circle cx="230" cy="150" r="8" fill="currentColor"/><circle cx="362" cy="76" r="5" fill="currentColor"/><circle cx="114" cy="64" r="5" fill="currentColor"/><circle cx="211" cy="279" r="5" fill="currentColor"/>
+      <g font-family="Georgia, serif" font-style="italic" font-size="18" fill="currentColor"><text x="342" y="200">F = ma</text><text x="31" y="212">E = hν</text><text x="284" y="28">∇ · E = ρ/ε₀</text></g>
+    </svg>
+    <div class="figure-bottom"><span>从微观到宇宙</span><span>EVERYTHING IS CONNECTED</span></div>
+  </div>
+</section>
+) : <DefaultHero />}

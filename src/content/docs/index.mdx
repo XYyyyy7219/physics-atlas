@@ -1,0 +1,21 @@
+---
+title: 物理图谱
+description: 从一个问题出发，看见物理的全貌。一本持续生长的中文物理知识库。
+template: splash
+hero:
+  title: 从一个问题出发，看见物理的全貌。
+  tagline: 一本持续生长的中文物理知识库。
+editUrl: false
+pagination: false
+---
+
+import KnowledgeMap from '../../components/KnowledgeMap.astro';
+import RecentNotes from '../../components/RecentNotes.astro';
+import { sitePath } from '../../lib/paths';
+
+<KnowledgeMap />
+
+<section class="home-bottom" aria-label="笔记与学习路径">
+  <RecentNotes />
+  <aside class="path-note"><span class="path-icon" aria-hidden="true">↳</span><p class="eyebrow">FIND YOUR PATH</p><h2>知识有联系，<br/>学习有路径。</h2><p>在地图中看见知识之间的联系，<br/>记录自己的位置，再向前一步。</p><a href={sitePath('learning-map/')}>打开学习地图 <span aria-hidden="true">→</span></a></aside>
+</section>
