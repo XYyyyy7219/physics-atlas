@@ -1,9 +1,11 @@
 export const domains = [
   { id: 'mechanics', title: '力学' }, { id: 'electromagnetism', title: '电磁学' },
-  { id: 'thermodynamics', title: '热学' }, { id: 'waves', title: '振动与波' },
-  { id: 'optics', title: '光学' }, { id: 'modern', title: '近代物理' },
+  { id: 'thermodynamics', title: '热学' },
+  { id: 'optics', title: '光学' }, { id: 'atomic-physics', title: '原子物理学' },
   { id: 'math', title: '数学工具' },
 ] as const;
+// 只用于兼容已有个人记录；不再作为地图入口或新建分类。
+export const retiredDomains: readonly string[] = ['waves', 'modern'];
 export const kinds = { concept: '概念', law: '定律', method: '方法', example: '例题' } as const;
 export const statuses = { 'not-started': '未开始', learning: '学习中', mastered: '已掌握' } as const;
 export type Status = keyof typeof statuses;
@@ -85,7 +87,7 @@ export function parseState(value: unknown): AtlasState {
   if (input.version !== 1) throw new Error('不支持这个备份版本。');
   const nodes: KnowledgeNode[] = list(input.nodes).map(raw => {
     const n = object(raw), id = string(n.id), domain = string(n.domain), kind = string(n.kind);
-    if (!id.startsWith('local-') || !domains.some(d => d.id === domain) || !Object.hasOwn(kinds, kind)) throw new Error('备份中的知识点格式不正确。');
+    if (!id.startsWith('local-') || (!domains.some(d => d.id === domain) && !retiredDomains.includes(domain)) || !Object.hasOwn(kinds, kind)) throw new Error('备份中的知识点格式不正确。');
     return { id, title: string(n.title, 100), domain, kind: kind as KnowledgeNode['kind'], summary: string(n.summary, 6000), requires: ids(n.requires), local: true,
       variants: list(n.variants, 20).map(raw => { const v = object(raw); return {id: string(v.id), title: string(v.title), requires: ids(v.requires)}; }) };
   });

@@ -1,4 +1,4 @@
-import { domains, kinds, statuses, freshState, parseState, validateGraph, allNodes, dependencies, prerequisitePlan, completePrerequisites, newId, newItem, type AtlasState, type KnowledgeNode, type Lecture, type LectureItem, type Status } from '../lib/atlas-model';
+import { domains, retiredDomains, kinds, statuses, freshState, parseState, validateGraph, allNodes, dependencies, prerequisitePlan, completePrerequisites, newId, newItem, type AtlasState, type KnowledgeNode, type Lecture, type LectureItem, type Status } from '../lib/atlas-model';
 import { sitePath } from '../lib/paths';
 
 const escape = (value: unknown) => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
@@ -21,7 +21,7 @@ const findNode = (id: string) => nodes().find(n => n.id === id);
 const activeLecture = () => state.lectures.find(l => l.id === state.activeLecture) || state.lectures[0];
 const selected = (a: string, b: string) => a === b ? ' selected' : '';
 const statusOf = (id: string): Status => Object.hasOwn(state.progress,id) ? state.progress[id] : 'not-started';
-const domainTitle = (id: string) => domains.find(d => d.id === id)?.title || id;
+const domainTitle = (id: string) => domains.find(d => d.id === id)?.title || (retiredDomains.includes(id) ? '待重新分类' : id);
 
 function notify(message: string) {
   const el = app?.querySelector('[data-atlas-notice]');
@@ -37,7 +37,7 @@ function changeLecture(change: (lecture: Lecture) => void, message = '') {
   const current = activeLecture(); if (!current) return;
   update(next => { const lecture = next.lectures.find(l => l.id === current.id)!; change(lecture); }, message);
 }
-function optionsDomain(value: string, all = true) { return `${all ? '<option value="all">全部领域</option>' : ''}${domains.map(d => `<option value="${d.id}"${selected(d.id,value)}>${d.title}</option>`).join('')}`; }
+function optionsDomain(value: string, all = true) { const retired = !all && retiredDomains.includes(value) ? `<option value="${escape(value)}" selected>待重新分类</option>` : ''; return `${all ? '<option value="all">全部领域</option>' : ''}${retired}${domains.map(d => `<option value="${d.id}"${selected(d.id,value)}>${d.title}</option>`).join('')}`; }
 function optionsNodes(exclude = '', checked: string[] = []) { return nodes().filter(n => n.id !== exclude).map(n => `<option value="${escape(n.id)}"${checked.includes(n.id) ? ' selected' : ''}>${escape(n.title)}</option>`).join(''); }
 function filters() {
   return `<div class="atlas-filters"><label class="atlas-search"><span>⌕</span><input data-filter="query" type="search" aria-label="搜索知识点" placeholder="搜索知识点…" value="${escape(query)}" /></label><select data-filter="domain" aria-label="选择领域">${optionsDomain(domain)}</select><select data-filter="status" aria-label="筛选学习状态"><option value="all">全部状态</option>${Object.entries(statuses).map(([s,l])=>`<option value="${s}"${selected(s,statusFilter)}>${l}</option>`).join('')}</select><button class="atlas-button primary" data-action="new-node">＋ 新建知识点</button></div>`;

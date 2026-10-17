@@ -4,7 +4,7 @@
 
 ## 内容放在哪里
 
-专题讲义放在 `src/content/docs/lectures/<slug>.md` 或 `.mdx`；领域笔记放在同一内容目录下的 `mechanics/`、`electromagnetism/`、`thermodynamics/`、`waves/`、`optics/`、`modern/`、`math/` 中。使用英文小写文件名和连字符，保留每个目录的 `index.mdx`。
+专题讲义放在 `src/content/docs/lectures/<slug>.md` 或 `.mdx`；领域笔记放在同一内容目录下的 `mechanics/`、`electromagnetism/`、`thermodynamics/`、`optics/`、`atomic-physics/`、`math/` 中。使用英文小写文件名和连字符，保留每个目录的 `index.mdx`。
 
 从 `templates/note.md.template` 复制结构即可。它故意没有正式学科内容。文章顶部填写标题、简介和排序；需要进入学习地图时再填写可选的 `atlas`。
 

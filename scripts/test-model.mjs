@@ -37,3 +37,18 @@ test('恢复时不接受外部链接字段，不让导入数据改变页面来�
   const state=freshState();state.nodes=[{...a,url:'https://untrusted.example/'}];
   assert.equal(parseState(state).nodes[0].url,undefined);
 });
+
+test('分类调整后可读取旧个人记录，保留讲义备注、位置和进度',()=>{
+  const oldWave={...node('local-wave'),domain:'waves'};
+  const oldModern={...node('local-modern',[oldWave.id]),domain:'modern'};
+  const atomic={...node('local-atomic'),domain:'atomic-physics'};
+  const state=freshState();state.nodes=[oldWave,oldModern,atomic];state.lectures=[lecture([oldModern])];
+  state.lectures[0].items[0].note='保留的学习备注';state.progress[oldModern.id]='mastered';state.currentNode=oldModern.id;
+  const restored=parseState(JSON.parse(JSON.stringify(state)));
+  assert.deepEqual(restored.nodes.map(n=>n.domain),['waves','modern','atomic-physics']);
+  assert.equal(restored.lectures[0].items[0].note,'保留的学习备注');
+  assert.equal(restored.progress[oldModern.id],'mastered');assert.equal(restored.currentNode,oldModern.id);
+  validateGraph(restored.nodes);
+  assert.deepEqual(parseState(JSON.parse(JSON.stringify(restored))),restored);
+  assert.throws(()=>parseState({...state,nodes:[{...atomic,domain:'unrecognized-domain'}]}),/格式不正确/);
+});
