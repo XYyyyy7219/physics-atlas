@@ -1,6 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { freshState, parseState, validateGraph, prerequisitePlan, completePrerequisites, newItem } from '../src/lib/atlas-model.ts';
+import { courses } from '../src/data/courses.ts';
+import { chapters } from '../src/data/chapters.ts';
+import { validateOutline, validateChapterAssignment } from '../src/lib/course-outline.ts';
+
+test('课程目录拒绝重复路径、缺失课程、缺失前置与循环', () => {
+  assert.doesNotThrow(() => validateOutline());
+  assert.throws(() => validateOutline(courses, [...chapters, { ...chapters[0], id: 'duplicate' }]), /路径重复/);
+  assert.throws(() => validateOutline(courses, [{ ...chapters[0], courseId: 'missing' }]), /课程不存在/);
+  assert.throws(() => validateOutline(courses, [{ ...chapters[0], requires: ['missing'] }]), /前置章节不存在/);
+  assert.throws(() => validateOutline(courses, [{ ...chapters[0], requires: [chapters[0].id] }]), /循环/);
+});
+
+test('知识点章节必须存在且属于同一课程；旧条目可暂不分章', () => {
+  assert.doesNotThrow(() => validateChapterAssignment('mechanics', 'mechanics-motion'));
+  assert.doesNotThrow(() => validateChapterAssignment('mechanics'));
+  assert.throws(() => validateChapterAssignment('optics', 'mechanics-motion'), /不匹配/);
+  assert.throws(() => validateChapterAssignment('mechanics', 'missing'), /不匹配/);
+});
 
 const node=(id,requires=[],variants=[])=>({id,title:id,domain:'mechanics',kind:'concept',summary:'',requires,variants,local:true});
 const a=node('local-a'), b=node('local-b',[a.id]), c=node('local-c',[b.id]);

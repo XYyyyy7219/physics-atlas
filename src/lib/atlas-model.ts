@@ -1,7 +1,6 @@
+import { orderedCourses } from '../data/courses.ts';
 export const domains = [
-  { id: 'mechanics', title: '力学' }, { id: 'electromagnetism', title: '电磁学' },
-  { id: 'thermodynamics', title: '热学' },
-  { id: 'optics', title: '光学' }, { id: 'atomic-physics', title: '原子物理学' },
+  ...orderedCourses.map(({ id, title }) => ({ id, title })),
   { id: 'math', title: '数学工具' },
 ] as const;
 // 只用于兼容已有个人记录；不再作为地图入口或新建分类。
@@ -12,7 +11,7 @@ export type Status = keyof typeof statuses;
 export interface KnowledgeNode {
   id: string; title: string; domain: string; kind: keyof typeof kinds; summary: string;
   requires: string[]; variants: { id: string; title: string; requires: string[] }[];
-  url?: string; local?: boolean;
+  url?: string; local?: boolean; chapterId?: string;
 }
 export interface LectureItem { nodeId: string; variantId: string; importance: number; placement: 'body' | 'reference'; note: string; }
 export interface Lecture { id: string; title: string; mode: 'student' | 'teacher'; items: LectureItem[]; }

@@ -114,6 +114,8 @@ npm.cmd run verify
 
 ## 项目结构与 AI 内容工作流
 
+课程入口与章节总览的数据、组件、知识条目关联及维护方式见 [课程架构说明](./docs/course-architecture.md)。首页仅展示五门基础课程；力学中的三个章节明确作为可调整的布局示例，等待正式大纲。
+
 `astro.config.mjs` 配置中文侧栏、主题、公式与站点路径；`src/content.config.ts` 加载并校验文章；`src/components/`、`src/styles/` 保留原有布局与外观；`src/lib/`、`src/scripts/` 实现学习工作台。依赖由 `package-lock.json` 锁定，目前为 Astro 7.4.0、Starlight 0.42.6 和 remark-math / rehype-katex / KaTeX。
 
 AI 草稿应先写到单独分支，检查来源、推导、单位、适用条件、前置关系和实际预览，再提交 Pull Request 供人工审核。详见 [AI 讲义工作流](./docs/ai-lecture-workflow.md)。当前没有自动写作代理或自动上线服务；这些检查也不能代替学科正确性与版权审核。

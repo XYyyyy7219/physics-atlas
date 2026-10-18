@@ -1,0 +1,12 @@
+---
+import { getChapters, chapterAnchor } from '../data/chapters';
+interface Props { courseId: string; mobile?: boolean }
+const { courseId, mobile = false } = Astro.props;
+const chapters = getChapters(courseId);
+---
+<nav class:list={['course-chapter-nav', { 'is-mobile': mobile }]} aria-label={mobile ? '本页章节' : '章节导航'} data-pagefind-ignore>
+  {!mobile && <><p class="eyebrow">ON THIS COURSE</p><h2>章节导航</h2></>}
+  <a class="course-overview-link" href="#_top" data-course-top>课程总览</a>
+  <ol>{chapters.map(chapter => <li><a href={'#' + chapterAnchor(chapter)} data-chapter-link={chapterAnchor(chapter)}><span>{String(chapter.order).padStart(2, '0')}</span>{chapter.title}</a></li>)}</ol>
+  {!mobile && <p class="course-rail-note">{chapters.some(chapter => chapter.example) ? '当前目录为布局示例，可随课程大纲调整。' : '沿章节导航，定位你要查阅的内容。'}</p>}
+</nav>

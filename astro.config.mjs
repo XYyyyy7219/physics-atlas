@@ -3,6 +3,7 @@ import starlight from '@astrojs/starlight';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { unified } from '@astrojs/markdown-remark';
+import { orderedCourses } from './src/data/courses.ts';
 
 // Netlify / Cloudflare 可保持默认值；GitHub Pages 工作流会提供站点和子路径。
 const site = process.env.SITE_URL || process.env.URL;
@@ -26,13 +27,17 @@ export default defineConfig({
       defaultLocale: 'root',
       locales: { root: { label: '简体中文', lang: 'zh-CN' } },
       favicon: '/favicon.svg',
-      customCss: ['katex/dist/katex.min.css', './src/styles/custom.css', './src/styles/workbench.css'],
+      customCss: ['katex/dist/katex.min.css', './src/styles/custom.css', './src/styles/workbench.css', './src/styles/courses.css'],
       components: {
         SiteTitle: './src/components/SiteTitle.astro',
         SocialIcons: './src/components/HeaderLinks.astro',
         Hero: './src/components/AtlasHero.astro',
         Footer: './src/components/Footer.astro',
         Sidebar: './src/components/AtlasSidebar.astro',
+        PageTitle: './src/components/CoursePageTitle.astro',
+        PageSidebar: './src/components/CoursePageSidebar.astro',
+        TwoColumnContent: './src/components/CourseColumns.astro',
+        ThemeProvider: './src/components/AtlasThemeProvider.astro',
       },
       sidebar: [
         { label: '知识库首页', link: '/' },
@@ -43,11 +48,7 @@ export default defineConfig({
           { label: '关于图谱', slug: 'start/welcome' },
           { label: '学习路线', slug: 'start/roadmap' },
         ] },
-        { label: '01 · 力学', items: [{ autogenerate: { directory: 'mechanics' } }] },
-        { label: '02 · 电磁学', items: [{ autogenerate: { directory: 'electromagnetism' } }], collapsed: true },
-        { label: '03 · 热学', items: [{ autogenerate: { directory: 'thermodynamics' } }], collapsed: true },
-        { label: '04 · 光学', items: [{ autogenerate: { directory: 'optics' } }], collapsed: true },
-        { label: '05 · 原子物理学', items: [{ autogenerate: { directory: 'atomic-physics' } }], collapsed: true },
+        ...orderedCourses.map(course => ({ label: `${String(course.order).padStart(2, '0')} · ${course.title}`, items: [{ autogenerate: { directory: course.id } }], collapsed: course.order !== 1 })),
         { label: '数学工具', items: [{ autogenerate: { directory: 'math' } }], collapsed: true },
         { label: '专题讲义', items: [{ autogenerate: { directory: 'lectures' } }], collapsed: true },
       ],

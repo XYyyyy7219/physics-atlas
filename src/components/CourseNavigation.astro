@@ -1,0 +1,15 @@
+---
+import { orderedCourses } from '../data/courses';
+import { getChapters, chapterAnchor } from '../data/chapters';
+import { sitePath } from '../lib/paths';
+interface Props { courseId: string }
+const { courseId } = Astro.props;
+---
+<nav class="course-sidebar-nav" aria-label="课程与章节" data-pagefind-ignore>
+  <a class="course-map-return" href={sitePath()}>← 物理知识地图</a><p class="course-nav-label">普通物理 · 基础课程</p>
+  <ul class="course-nav-list">{orderedCourses.map(course => <li>
+    <a class="course-nav-item" href={sitePath(course.id + '/')} aria-current={course.id === courseId ? 'page' : undefined}><span>{String(course.order).padStart(2, '0')}</span>{course.title}</a>
+    {course.id === courseId && getChapters(courseId).length > 0 && <ul class="course-chapter-tree">{getChapters(courseId).map(chapter => <li><a href={'#' + chapterAnchor(chapter)} data-chapter-link={chapterAnchor(chapter)}><span>{String(chapter.order).padStart(2, '0')}</span>{chapter.title}</a></li>)}</ul>}
+  </li>)}</ul>
+  <div class="course-sidebar-utilities"><a href={sitePath('library/')}>知识库</a><a href={sitePath('my-lectures/')}>我的讲义</a><a href={sitePath('learning-map/')}>学习地图</a></div>
+</nav>

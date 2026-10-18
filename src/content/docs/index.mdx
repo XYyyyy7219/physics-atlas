@@ -1,6 +1,6 @@
 ---
-title: 物理图谱
-description: 从一个问题出发，看见物理的全貌。一本持续生长的中文物理知识库。
+title: 物理知识地图
+description: 面向物理系本科生的开放物理知识库。从五门基础课程出发，系统学习、检索复习与自主探索。
 template: splash
 hero:
   title: 从一个问题出发，看见物理的全貌。
@@ -10,12 +10,7 @@ pagination: false
 ---
 
 import KnowledgeMap from '../../components/KnowledgeMap.astro';
-import RecentNotes from '../../components/RecentNotes.astro';
-import { sitePath } from '../../lib/paths';
 
 <KnowledgeMap />
 
-<section class="home-bottom" aria-label="笔记与学习路径">
-  <RecentNotes />
-  <aside class="path-note"><span class="path-icon" aria-hidden="true">↳</span><p class="eyebrow">FIND YOUR PATH</p><h2>知识有联系，<br/>学习有路径。</h2><p>在地图中看见知识之间的联系，<br/>记录自己的位置，再向前一步。</p><a href={sitePath('learning-map/')}>打开学习地图 <span aria-hidden="true">→</span></a></aside>
-</section>
+<aside class="course-study-note" aria-label="学习方式"><strong>从现象出发，回到理解</strong><p>沿问题、模型与规律深入学习，也能通过定义、公式与适用条件快速回顾。</p></aside>

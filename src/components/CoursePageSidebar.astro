@@ -1,0 +1,6 @@
+---
+import DefaultPageSidebar from '@astrojs/starlight/components/PageSidebar.astro';
+import CourseChapterNav from './CourseChapterNav.astro';
+const courseId = Astro.locals.starlightRoute.entry.data.course;
+---
+{courseId ? <CourseChapterNav courseId={courseId} /> : <DefaultPageSidebar />}
