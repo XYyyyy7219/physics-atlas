@@ -38,9 +38,11 @@ atlas:
 
 ## 组件与交互
 
-CourseCard、KnowledgeMap 提供统一课程入口。CourseOverview 负责总览正文、章节卡片与锚点区域。CourseNavigation 复用 Starlight 左栏与移动抽屉；CourseChapterNav 提供桌面右栏和窄屏折叠目录。CourseColumns、CoursePageTitle、CoursePageSidebar 仅覆盖课程页，其他页面委托 Starlight 原组件。
+CourseCard、KnowledgeMap 提供统一课程入口，首页标题为“物理图谱”，课程组标题为“普通物理”。CourseOverview 负责总览正文、章节卡片与锚点区域。CourseNavigation 复用 Starlight 左栏与移动抽屉，在各页面统一显示可折叠的“知识库”、浅色“普通物理”分类、无编号的五门课程，以及独立的“我的讲义”入口。左侧不再重复课程总览或章节树，点击品牌返回首页。
 
-course-navigation.ts 同步滚动位置、当前章节、卡片边框和 aria-current；原生锚点保留历史记录和键盘访问。移动目录选中后折叠，侧栏抽屉选中章节后关闭并聚焦正文。样式由 courses.css 维护，复用 Atlas 颜色变量，首次默认深色，仍可切换浅色或自动主题。
+CourseChapterNav 保留桌面右栏和窄屏折叠目录，章节编号统一使用“第一章、第二章”等中文表达，稳定的 ID 和锚点不受显示名称影响。CourseColumns、CoursePageTitle、CoursePageSidebar 仅覆盖课程页，其他页面委托 Starlight 原组件。
+
+course-navigation.ts 同步滚动位置、当前章节、卡片边框和 aria-current；原生锚点保留历史记录和键盘访问。移动章节目录选中后折叠并聚焦正文。样式由 courses.css 维护，复用 Atlas 颜色变量，首次默认深色，仍可切换浅色或自动主题。顶部和工作台导航不再显示独立的学习地图菜单；底部学习位置导览保留，可继续打开完整地图，既有个人记录和地图路由不变。“开始探索”“知识库首页”“专题讲义”不再作为侧栏选项，原有内容文件没有删除。
 
 现有个人进度与讲义存储保持不变。本次没有新增总览进度统计、用户系统、数据库、云同步、完整图谱算法或自动讲义生成。稳定的章节关联为后续功能提供数据基础。
 

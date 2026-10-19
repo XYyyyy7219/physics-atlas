@@ -40,17 +40,8 @@ export default defineConfig({
         ThemeProvider: './src/components/AtlasThemeProvider.astro',
       },
       sidebar: [
-        { label: '知识库首页', link: '/' },
-        { label: '知识库', slug: 'library' },
+        { label: '知识库', items: [{ label: '普通物理', items: orderedCourses.map(course => ({ label: course.title, slug: course.id })) }] },
         { label: '我的讲义', slug: 'my-lectures' },
-        { label: '学习地图', slug: 'learning-map' },
-        { label: '开始探索', items: [
-          { label: '关于图谱', slug: 'start/welcome' },
-          { label: '学习路线', slug: 'start/roadmap' },
-        ] },
-        ...orderedCourses.map(course => ({ label: `${String(course.order).padStart(2, '0')} · ${course.title}`, items: [{ autogenerate: { directory: course.id } }], collapsed: course.order !== 1 })),
-        { label: '数学工具', items: [{ autogenerate: { directory: 'math' } }], collapsed: true },
-        { label: '专题讲义', items: [{ autogenerate: { directory: 'lectures' } }], collapsed: true },
       ],
       tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
       credits: false,

@@ -20,3 +20,12 @@ export const chapters: readonly Chapter[] = [
 
 export const getChapters = (courseId: string) => chapters.filter(chapter => chapter.courseId === courseId).sort((a, b) => a.order - b.order);
 export const chapterAnchor = (chapter: Pick<Chapter, 'slug'>) => `chapter-${chapter.slug}`;
+
+/** Display numbering is independent of stable chapter IDs and URL anchors. */
+export function chapterLabel(order: number) {
+  if (!Number.isInteger(order) || order < 1 || order > 9999) return `第${order}章`;
+  const digits = '零一二三四五六七八九';
+  const units = ['', '十', '百', '千'];
+  const number = String(order).split('').map((digit, index, values) => digit === '0' ? '零' : digits[Number(digit)] + units[values.length - index - 1]).join('').replace(/零+/g, '零').replace(/零$/, '').replace(/^一十/, '十');
+  return `第${number}章`;
+}

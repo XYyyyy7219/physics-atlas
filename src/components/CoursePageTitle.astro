@@ -4,4 +4,4 @@ import { getCourse } from '../data/courses';
 import { sitePath } from '../lib/paths';
 const course = getCourse(Astro.locals.starlightRoute.entry.data.course);
 ---
-{course ? <div class="course-page-heading"><nav class="course-breadcrumbs" aria-label="面包屑"><a href={sitePath()}>物理知识地图</a><span aria-hidden="true">/</span><span aria-current="page">{course.title}</span></nav><p class="eyebrow">GENERAL PHYSICS · {course.en}</p><h1 id="_top">{course.title}</h1></div> : <DefaultPageTitle />}
+{course ? <div class="course-page-heading"><nav class="course-breadcrumbs" aria-label="面包屑"><a href={sitePath()}>物理图谱</a><span aria-hidden="true">/</span><span aria-current="page">{course.title}</span></nav><p class="eyebrow">GENERAL PHYSICS · {course.en}</p><h1 id="_top">{course.title}</h1></div> : <DefaultPageTitle />}

@@ -8,7 +8,6 @@ const { view, domain = '' } = Astro.props;
   <nav class="workbench-tabs" aria-label="学习工作台">
     <a href={sitePath('library/')} aria-current={view === 'library' ? 'page' : undefined}>知识库</a>
     <a href={sitePath('my-lectures/')} aria-current={view === 'lectures' ? 'page' : undefined}>我的讲义 <span data-atlas-count>0</span></a>
-    <a href={sitePath('learning-map/')} aria-current={view === 'map' ? 'page' : undefined}>学习地图</a>
   </nav>
   <div class="workbench-notice" role="status" data-atlas-notice aria-live="polite"></div>
   <div data-atlas-screen><p>正在打开你的学习空间…</p></div>

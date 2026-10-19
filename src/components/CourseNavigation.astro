@@ -1,15 +1,18 @@
 ---
 import { orderedCourses } from '../data/courses';
-import { getChapters, chapterAnchor } from '../data/chapters';
 import { sitePath } from '../lib/paths';
-interface Props { courseId: string }
-const { courseId } = Astro.props;
+const { entry } = Astro.locals.starlightRoute;
+const courseId = entry.data.course || entry.data.atlas?.domain || orderedCourses.find(course => entry.id.startsWith(course.id + '/'))?.id;
 ---
-<nav class="course-sidebar-nav" aria-label="课程与章节" data-pagefind-ignore>
-  <a class="course-map-return" href={sitePath()}>← 物理知识地图</a><p class="course-nav-label">普通物理 · 基础课程</p>
-  <ul class="course-nav-list">{orderedCourses.map(course => <li>
-    <a class="course-nav-item" href={sitePath(course.id + '/')} aria-current={course.id === courseId ? 'page' : undefined}><span>{String(course.order).padStart(2, '0')}</span>{course.title}</a>
-    {course.id === courseId && getChapters(courseId).length > 0 && <ul class="course-chapter-tree">{getChapters(courseId).map(chapter => <li><a href={'#' + chapterAnchor(chapter)} data-chapter-link={chapterAnchor(chapter)}><span>{String(chapter.order).padStart(2, '0')}</span>{chapter.title}</a></li>)}</ul>}
-  </li>)}</ul>
-  <div class="course-sidebar-utilities"><a href={sitePath('library/')}>知识库</a><a href={sitePath('my-lectures/')}>我的讲义</a><a href={sitePath('learning-map/')}>学习地图</a></div>
+<nav class="course-sidebar-nav" aria-label="知识库与课程" data-pagefind-ignore>
+  <details class="knowledge-navigation" open>
+    <summary>知识库<svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="m6 4 4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg></summary>
+    <div class="course-nav-group" role="group" aria-labelledby="course-group-label">
+      <p class="course-nav-label" id="course-group-label">普通物理</p>
+      <ul class="course-nav-list">{orderedCourses.map(course => <li>
+        <a class="course-nav-item" href={sitePath(course.id + '/')} aria-current={course.id === courseId ? (entry.data.course ? 'page' : 'location') : undefined}>{course.title}</a>
+      </li>)}</ul>
+    </div>
+  </details>
+  <a class="course-personal-link" href={sitePath('my-lectures/')} aria-current={Astro.url.pathname === sitePath('my-lectures/') ? 'page' : undefined}>我的讲义</a>
 </nav>
