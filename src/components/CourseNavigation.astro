@@ -1,8 +1,9 @@
 ---
 import { orderedCourses } from '../data/courses';
 import { sitePath } from '../lib/paths';
+import { getChapter } from '../data/chapters';
 const { entry } = Astro.locals.starlightRoute;
-const courseId = entry.data.course || entry.data.atlas?.domain || orderedCourses.find(course => entry.id.startsWith(course.id + '/'))?.id;
+const courseId = entry.data.course || getChapter(entry.data.chapterPage || entry.data.lecture?.chapter)?.courseId || entry.data.atlas?.domain || orderedCourses.find(course => entry.id.startsWith(course.id + '/'))?.id;
 ---
 <nav class="course-sidebar-nav" aria-label="知识库与课程" data-pagefind-ignore>
   <details class="knowledge-navigation" open>

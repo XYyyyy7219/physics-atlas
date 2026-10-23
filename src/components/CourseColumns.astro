@@ -1,7 +1,8 @@
 ---
 import DefaultColumns from '@astrojs/starlight/components/TwoColumnContent.astro';
-import { getChapters } from '../data/chapters';
-const courseId = Astro.locals.starlightRoute.entry.data.course;
+import { getChapter, getChapters } from '../data/chapters';
+const data = Astro.locals.starlightRoute.entry.data;
+const courseId = data.course || getChapter(data.chapterPage || data.lecture?.chapter)?.courseId;
 const hasChapters = courseId && getChapters(courseId).length > 0;
 ---
 {courseId ? <div class:list={['course-page-columns', { 'has-chapters': hasChapters }]}><div class="course-main-pane"><slot /></div>{hasChapters && <aside class="course-right-rail"><slot name="right-sidebar" /></aside>}</div> : <DefaultColumns><slot /><Fragment slot="right-sidebar"><slot name="right-sidebar" /></Fragment></DefaultColumns>}

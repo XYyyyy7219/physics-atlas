@@ -1,0 +1,37 @@
+---
+import { getChapter, sectionLabel } from '../data/chapters';
+import { getLectures } from '../lib/lectures';
+import { getCatalog } from '../lib/catalog';
+import { sitePath } from '../lib/paths';
+import ReadingFrame from './ReadingFrame.astro';
+import { unified } from '@astrojs/markdown-remark';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+interface Props { chapterId: string }
+const { chapterId } = Astro.props;
+const chapter = getChapter(chapterId)!;
+const entries = await getLectures(chapterId);
+const catalog = await getCatalog();
+const renderer = await unified({remarkPlugins:[remarkMath],rehypePlugins:[[rehypeKatex,{strict:'error',throwOnError:true}]]}).createRenderer({syntaxHighlight:false});
+const reviewHtml = new Map(await Promise.all(entries.flatMap(entry => entry.data.lecture!.nodes).map(async node => [node.id, (await renderer.render(node.quickReview)).code] as const)));
+const questionHtml = new Map(await Promise.all(entries.flatMap(entry => entry.data.lecture!.nodes).map(async node => [node.id, (await renderer.render(node.summary)).code] as const)));
+const pending = Array.from({length:chapter.totalSections || entries.length}, (_,i) => i+1).filter(order => !entries.some(entry => entry.data.lecture!.order === order));
+---
+<ReadingFrame>
+  <div class="chapter-reading-intro"><p>{chapter.summary}</p><p class="chapter-publication">全章 {chapter.totalSections} 节 · 已收录 {entries.length} 节 · {entries.reduce((n,entry)=>n+entry.data.lecture!.nodes.length,0)} 个知识节点</p><p>先选一节，再选择知识节点。概要用于回顾，完整讲义保留实验依据、推导与适用条件。</p><p class="lecture-kind-legend"><span>● 概念与模型</span><span>● 方法与推导</span><span>个人掌握状态仅保存在当前浏览器</span></p></div>
+  <div class="reader-learning-progress" data-progress-ids={JSON.stringify(entries.flatMap(entry=>entry.data.lecture!.nodes.map(node=>node.id)))} data-pagefind-ignore><span data-reader-progress>正在读取个人进度</span><progress max={catalog.filter(node=>node.chapterId===chapterId).length} value="0" aria-label="本章知识节点掌握进度"></progress></div>
+  <details class="chapter-mobile-outline"><summary>本章各节</summary>{entries.map(entry => <a href={'#section-'+entry.data.lecture!.order}>{sectionLabel(entry.data.lecture!.order)} {entry.data.title}</a>)}</details>
+  {entries.map(entry => { const lecture = entry.data.lecture!; return <section class="lecture-section-panel" id={'section-'+lecture.order} data-lecture-section data-course-chapter tabindex="-1" aria-labelledby={'section-heading-'+lecture.order}>
+    <header class="lecture-panel-heading"><h2 id={'section-heading-'+lecture.order}><span>{sectionLabel(lecture.order)}</span>{entry.data.title}</h2><a href={sitePath(entry.id+'/')}>阅读全文 ↗</a></header>
+    <div class="lecture-panel-grid">
+      <div class="lecture-node-menu" role="group" aria-label={sectionLabel(lecture.order)+'知识节点'}>{lecture.nodes.map((node,index) => <div class="lecture-node-row"><button type="button" class:list={['lecture-node-choice',{'is-selected':index===0}]} data-choose-node={node.id} data-action="reader-select" data-id={node.id} aria-pressed={index===0} aria-controls={'preview-'+node.id}><span class:list={['lecture-kind-dot',node.kind]} aria-hidden="true"></span><span>{node.title}</span><small>{node.code}</small></button><button type="button" class="lecture-node-add" data-action="add-to-lecture" data-id={node.id} aria-label={'将'+node.title+'加入我的讲义'}>＋</button></div>)}<p>{lecture.nodes.length} 个知识节点</p></div>
+      <div class="lecture-node-previews">{lecture.nodes.map((node,index) => <article class="lecture-node-preview" id={'preview-'+node.id} data-node-preview={node.id} hidden={index!==0}>
+        <div class="lecture-preview-meta"><span class="kind-badge">{node.label}</span><span data-node-progress={node.id}>未开始</span></div><h3>{node.title}</h3><div class="lecture-core-question" set:html={questionHtml.get(node.id)} /><div class="lecture-quick-review" set:html={reviewHtml.get(node.id)} />
+        <div class="lecture-node-relations"><span>已收录的前置</span>{node.requires.length ? node.requires.map(id=>{const pre=catalog.find(item=>item.id===id)!;return <a href={pre.url}>{pre.title}</a>;}) : <p>无已收录的节点前置；学科先修见完整讲义。</p>}</div>
+        <div class="lecture-preview-actions"><a class="atlas-button primary" href={sitePath(entry.id+'/')+'#'+node.id}>阅读详情与推导 ↗</a><button class="atlas-button" type="button" data-action="add-to-lecture" data-id={node.id}>加入我的讲义</button><button class="atlas-button" type="button" data-action="master-node" data-id={node.id} data-master-button>标记已掌握</button><a class="text-button" href={sitePath('learning-map/')+'?node='+encodeURIComponent(node.id)}>在地图中定位</a></div>
+      </article>)}</div>
+    </div>
+  </section>; })}
+  {pending.length>0 && <section class="lecture-pending" aria-labelledby="待补充"><h2 id="待补充">后续各节</h2><p>以下各节尚未提供讲义，标题与知识节点待补充。</p><div>{pending.map(order=><span>{sectionLabel(order)}<small>待补充</small></span>)}</div></section>}
+</ReadingFrame>
+<script>import '../scripts/lecture-navigation';</script>

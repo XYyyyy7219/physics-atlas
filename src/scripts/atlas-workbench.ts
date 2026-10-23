@@ -103,6 +103,9 @@ function render() {
   if (screen) { try { screen.innerHTML = view==='map'?renderMap():view==='lectures'?renderLectures():renderLibrary(); } catch (error) { screen.innerHTML = empty('有一段知识联系需要修复。',escape((error as Error).message)); } }
   const l = activeLecture(); document.querySelectorAll('[data-atlas-count]').forEach(el=>el.textContent=String(l?.items.length||0));
   renderMini();
+  app?.querySelectorAll<HTMLElement>('[data-node-progress]').forEach(el => { el.textContent = statuses[statusOf(el.dataset.nodeProgress!)]; });
+  app?.querySelectorAll<HTMLElement>('[data-progress-ids]').forEach(el => { const ids: string[] = JSON.parse(el.dataset.progressIds || '[]'); const mastered = ids.filter(id=>statusOf(id)==='mastered').length; el.querySelector('[data-reader-progress]')!.textContent = `已掌握 ${mastered} / ${ids.length} 个知识节点`; const progress = el.querySelector('progress'); if (progress) progress.value = mastered; });
+  app?.querySelectorAll<HTMLButtonElement>('[data-master-button], .node-reading-actions [data-action="master-node"]').forEach(button => { const mastered = statusOf(button.dataset.id!) === 'mastered'; button.textContent = mastered ? '取消已掌握' : '标记已掌握'; button.setAttribute('aria-pressed', String(mastered)); });
 }
 function openModal(title: string, body: string) {
   if (!dialog || !modal) return;
@@ -142,7 +145,7 @@ async function previewLecture() {
   const parts = await Promise.all(l.items.filter(i=>i.placement==='body').map(async (item,index)=> {
     const node=findNode(item.nodeId)!; let content=`<p class="preview-summary">${escape(node.summary||'内容待补充。')}</p>`;
     if (node.url) {
-      try { const url = new URL(node.url,location.origin); if (url.origin!==location.origin) throw new Error(); const response=await fetch(url); if (!response.ok) throw new Error(); const parsed=new DOMParser().parseFromString(await response.text(),'text/html'); const article=parsed.querySelector('.sl-markdown-content'); if (article) { article.querySelectorAll('script,iframe,object,embed,form,button,[data-atlas-app]').forEach(el=>el.remove()); article.querySelectorAll('*').forEach(el=>{ for(const attr of [...el.attributes]) if (attr.name.startsWith('on')) el.removeAttribute(attr.name); }); content=article.innerHTML; } } catch { content+='<p>正文暂时无法加载，请通过下方链接阅读。</p>'; }
+      try { const url = new URL(node.url,location.origin); if (url.origin!==location.origin) throw new Error(); const response=await fetch(url); if (!response.ok) throw new Error(); const parsed=new DOMParser().parseFromString(await response.text(),'text/html'); const anchor=url.hash ? parsed.getElementById(decodeURIComponent(url.hash.slice(1))) : null; const article=anchor?.closest('[data-knowledge-content]') || parsed.querySelector('.sl-markdown-content'); if (article) { article.querySelectorAll('script,iframe,object,embed,form,button,[data-atlas-app]').forEach(el=>el.remove()); article.querySelectorAll('*').forEach(el=>{ for(const attr of [...el.attributes]) if (attr.name.startsWith('on')) el.removeAttribute(attr.name); }); article.querySelectorAll('a[href]').forEach(link=>{const href=link.getAttribute('href');if(href)link.setAttribute('href',new URL(href,url).href);}); content=article.innerHTML; } } catch { content+='<p>正文暂时无法加载，请通过下方链接阅读。</p>'; }
     }
     return `<section class="preview-section"><h3>${index+1}. ${escape(node.title)}</h3>${content}${node.url?`<p><a href="${escape(node.url)}">阅读原笔记 ↗</a></p>`:''}${node.variants.length?`<p class="preview-path">推导路径：${escape(node.variants.find(v=>v.id===item.variantId)?.title||'尚未选择')}</p>`:''}${l.mode==='teacher'?`<div class="teacher-note"><span>${'★'.repeat(item.importance)} · 教师备注</span><p>${escape(item.note||'未填写备注。')}</p></div>`:''}</section>`;
   }));
@@ -191,6 +194,8 @@ app?.addEventListener('click',event=> {
     case 'select-node': selectedId=id; if(dialog?.open) openModal('知识点',`<div class="dialog-node-detail">${nodeDetail(findNode(id))}</div>`); else render(); break;
     case 'locate': selectNode(id); notify('学习位置已更新。'); break;
     case 'add-to-lecture': addToLecture(id); break;
+    case 'reader-select': selectNode(id); break;
+    case 'master-node': if (findNode(id)) update(next=>{next.progress[id]=statusOf(id)==='mastered'?'learning':'mastered'; next.currentNode=id;}, statusOf(id)==='mastered'?'已恢复为学习中。':'已标记为掌握。'); break;
     case 'pick-nodes': pickNodes(); break;
     case 'prerequisites': showPrerequisites(); break;
     case 'mode': changeLecture(l=>{l.mode=target.dataset.mode as Lecture['mode'];}); break;
@@ -261,6 +266,11 @@ window.addEventListener('afterprint',()=>{delete document.body.dataset.atlasPrin
 window.addEventListener('storage',event=>{if(event.key===key){try{state=event.newValue?parseState(JSON.parse(event.newValue)):freshState();validateGraph(nodes());render();}catch{notify('另一标签页的个人记录无法读取，请先导出备份。');}}});
 
 // 阅读站点知识点时，位置导览自动定位；不会把条目标记为“已掌握”。
-const current=catalog.find(n=>n.url?.replace(/\/$/,'')===location.pathname.replace(/\/$/,''));
-if(current&&state.currentNode!==current.id) update(next=>{next.currentNode=current.id;});
+const locateReading = () => {
+  const samePage = catalog.filter(node => node.url && new URL(node.url,location.origin).pathname.replace(/\/$/,'') === location.pathname.replace(/\/$/,''));
+  const current = samePage.find(node => new URL(node.url!,location.origin).hash === location.hash) || samePage[0];
+  if (current && state.currentNode !== current.id) update(next=>{next.currentNode=current.id;});
+};
+locateReading();
+window.addEventListener('hashchange', locateReading);
 render();if(storageError)notify(storageError);

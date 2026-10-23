@@ -27,7 +27,7 @@ export default defineConfig({
       defaultLocale: 'root',
       locales: { root: { label: '简体中文', lang: 'zh-CN' } },
       favicon: '/favicon.svg',
-      customCss: ['katex/dist/katex.min.css', './src/styles/custom.css', './src/styles/workbench.css', './src/styles/courses.css'],
+      customCss: ['katex/dist/katex.min.css', './src/styles/custom.css', './src/styles/workbench.css', './src/styles/courses.css', './src/styles/lectures.css'],
       components: {
         SiteTitle: './src/components/SiteTitle.astro',
         SocialIcons: './src/components/HeaderLinks.astro',
@@ -38,6 +38,7 @@ export default defineConfig({
         PageSidebar: './src/components/CoursePageSidebar.astro',
         TwoColumnContent: './src/components/CourseColumns.astro',
         ThemeProvider: './src/components/AtlasThemeProvider.astro',
+        MarkdownContent: './src/components/LectureContent.astro',
       },
       sidebar: [
         { label: '知识库', items: [{ label: '普通物理', items: orderedCourses.map(course => ({ label: course.title, slug: course.id })) }] },
