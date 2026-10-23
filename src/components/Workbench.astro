@@ -1,0 +1,20 @@
+---
+import CatalogData from './CatalogData.astro';
+import { sitePath } from '../lib/paths';
+interface Props { view: 'map' | 'lectures' | 'library'; domain?: string; }
+const { view, domain = '' } = Astro.props;
+---
+<div class="atlas-workbench" data-atlas-app data-view={view} data-domain={domain} data-pagefind-ignore>
+  <nav class="workbench-tabs" aria-label="学习工作台">
+    <a href={sitePath('library/')} aria-current={view === 'library' ? 'page' : undefined}>知识库</a>
+    <a href={sitePath('my-lectures/')} aria-current={view === 'lectures' ? 'page' : undefined}>我的讲义 <span data-atlas-count>0</span></a>
+  </nav>
+  <div class="workbench-notice" role="status" data-atlas-notice aria-live="polite"></div>
+  <div data-atlas-screen><p>正在打开你的学习空间…</p></div>
+  <div class="personal-storage"><span>◉ 个人记录保存在当前浏览器</span><div><button data-action="export">导出备份</button><button data-action="import">导入备份</button></div></div>
+  <input data-atlas-import type="file" accept="application/json,.json" hidden aria-label="导入个人备份" />
+  <dialog class="atlas-dialog" data-atlas-dialog aria-label="学习工作台对话框"><div data-atlas-modal></div></dialog>
+  <noscript>请启用浏览器 JavaScript，以使用个人讲义与学习地图；知识库文章仍可正常阅读。</noscript>
+</div>
+<CatalogData />
+<script>import '../scripts/atlas-workbench';</script>

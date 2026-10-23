@@ -1,0 +1,11 @@
+---
+import { getCollection } from 'astro:content';
+import { sitePath } from '../lib/paths';
+interface Props { category: string; label: string; description: string; }
+const { category, label, description } = Astro.props;
+const notes = (await getCollection('docs'))
+  .filter(p => p.id.startsWith(category + '/') && !p.id.endsWith('/index'))
+  .sort((a, b) => (a.data.sidebar.order ?? 999) - (b.data.sidebar.order ?? 999) || a.data.title.localeCompare(b.data.title, 'zh-CN'));
+---
+<div class="collection-intro"><span class="collection-label">{label}</span><p>{description}</p><span class="collection-total">{notes.length} 篇{category === 'lectures' ? '讲义' : '笔记'}</span>{category!=='lectures' && <a class="category-workbench-link" href={sitePath('library/')+'?domain='+category}>查看本领域知识点 →</a>}</div>
+{notes.length > 0 ? <div class="collection-list">{notes.map((note, i) => <a class="reading-row" href={sitePath(note.id.replace(/\/$/, '') + '/')}><span class="reading-number">{String(i + 1).padStart(2, '0')}</span><div><h3>{note.data.title}</h3><p>{note.data.description}</p></div><span class="card-arrow" aria-hidden="true">↗</span></a>)}</div> : <div class="empty-collection"><svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"><rect x="8" y="5" width="25" height="30" rx="3" stroke="currentColor" stroke-width="1.3"/><path d="M14 14h13M14 20h13M14 26h8M5 11v24a3 3 0 0 0 3 3h21" stroke="currentColor" stroke-width="1.3"/></svg><h2>留一页空白，等待新的理解。</h2><p>这里的{category === 'lectures' ? '讲义' : '笔记'}正在准备中，之后会陆续收录。</p><a href={sitePath()}>返回知识地图 <span aria-hidden="true">→</span></a></div>}

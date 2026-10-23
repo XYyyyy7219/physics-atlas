@@ -1,0 +1,13 @@
+---
+import type { Course } from '../data/courses';
+import { sitePath } from '../lib/paths';
+interface Props { course: Course; count?: number }
+const { course, count = 0 } = Astro.props;
+---
+<a class="course-card" href={sitePath(course.id + '/')}>
+  <div class="course-card-label"><span>{String(course.order).padStart(2, '0')}</span><span>{course.en}</span></div>
+  <div class="course-card-formula" aria-hidden="true">{course.formula}</div>
+  <h3>{course.title}</h3><p>{course.description}</p>
+  <div class="course-card-topics">{course.topics}</div>
+  <div class="course-card-action"><span>进入课程</span>{count > 0 && <small>{count} 个知识条目</small>}<span aria-hidden="true">→</span></div>
+</a>

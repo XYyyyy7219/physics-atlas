@@ -1,0 +1,9 @@
+---
+import { sitePath } from '../lib/paths';
+const links = [
+  ['知识库', 'library/'], ['我的讲义', 'my-lectures/'],
+];
+---
+<nav class="atlas-nav" aria-label="主导航">
+  {links.map(([label, path]) => <a href={sitePath(path)} aria-current={Astro.url.pathname === sitePath(path) ? 'page' : undefined}>{label}</a>)}
+</nav>

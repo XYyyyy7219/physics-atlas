@@ -1,0 +1,10 @@
+---
+import { orderedCourses } from '../data/courses';
+import { getCatalog } from '../lib/catalog';
+import CourseCard from './CourseCard.astro';
+const nodes = await getCatalog();
+---
+<section class="course-entry" aria-labelledby="基础课程">
+  <div class="course-section-heading"><div><p class="eyebrow">GENERAL PHYSICS</p><h2 id="基础课程">普通物理</h2></div><p>选择一个领域，开始建立你的物理图景。</p></div>
+  <div class="course-grid">{orderedCourses.map(course => <CourseCard course={course} count={nodes.filter(node => node.domain === course.id).length} />)}</div>
+</section>

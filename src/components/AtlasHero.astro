@@ -1,0 +1,13 @@
+---
+import { sitePath } from '../lib/paths';
+import DefaultHero from '@astrojs/starlight/components/Hero.astro';
+import HeaderLinks from './HeaderLinks.astro';
+const isHome = Astro.url.pathname.replace(/\/$/, '') === sitePath().replace(/\/$/, '');
+---
+{isHome ? <section class="course-home-intro" aria-labelledby="_top">
+  <p class="eyebrow"><span></span> PHYSICS ATLAS · 开放物理知识库</p>
+  <h1 id="_top" data-page-title>物理图谱</h1>
+  <p class="course-home-description">从现象走向规律，从问题建立联系。<br />通过系统化课程，逐步构建你的物理知识体系。</p>
+  <div class="course-home-caption"><span>面向物理系本科生</span><span>系统学习 · 检索复习 · 自主探索</span></div>
+  <div class="course-mobile-links"><HeaderLinks /></div>
+</section> : <DefaultHero />}

@@ -1,0 +1,5 @@
+---
+import { getCatalog } from '../lib/catalog';
+const catalog = await getCatalog();
+---
+<script type="application/json" data-atlas-catalog set:html={JSON.stringify(catalog).replace(/</g, '\\u003c')} />

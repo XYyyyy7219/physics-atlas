@@ -1,6 +1,6 @@
 # Physics Atlas · 物理图谱
 
-一个 Astro + Starlight 中文物理知识库框架。当前版本按你的要求只搭框架：**没有讲义、入门笔记或物理课程正文**。六个物理领域、数学工具、专题讲义和学习路线均保留内容入口。
+一个 Astro + Starlight 中文物理知识库框架。当前版本按你的要求只搭框架：**没有讲义、入门笔记或物理课程正文**。五个物理领域、数学工具、专题讲义和学习路线均保留内容入口。
 
 现已补充“我的讲义”“可视化学习地图”和“学习位置导览”。“讲义推荐”不在本次范围。个人记录先保存在当前浏览器，可备份恢复，暂未接账号与云同步。详见 [学习工作台功能说明](./功能说明.md)。
 
@@ -20,8 +20,8 @@ npm.cmd run preview
 
 ## 已有框架
 
-- 简洁的白底与蓝色强调色、物理图谱标识、六领域知识地图。
-- 力学、电磁学、热学、振动与波、光学、近代物理分类。
+- 简洁的白底与蓝色强调色、物理图谱标识、五领域知识地图。
+- 力学、电磁学、热学、光学、原子物理学分类。
 - 数学工具、专题讲义、关于图谱、学习路线入口。
 - 内容为空时的提示；添加文章后自动显示分类列表、首页条目与数量。
 - Starlight 中文全文搜索、侧边栏、文章目录、主题切换和手机布局。
@@ -47,9 +47,8 @@ npm.cmd run preview
 | `src/content/docs/mechanics/` | 力学 |
 | `src/content/docs/electromagnetism/` | 电磁学 |
 | `src/content/docs/thermodynamics/` | 热学 |
-| `src/content/docs/waves/` | 振动与波 |
 | `src/content/docs/optics/` | 光学 |
-| `src/content/docs/modern/` | 近代物理 |
+| `src/content/docs/atomic-physics/` | 原子物理学 |
 | `src/content/docs/math/` | 数学工具 |
 | `src/content/docs/lectures/` | 专题讲义 |
 
@@ -109,7 +108,13 @@ npm.cmd run verify
 
 本项目启动脚本只在子进程中关闭 Astro 遥测，避免创建用户级配置。它不修改电脑的全局配置。
 
+分类调整同时涉及首页地图、侧栏、学习地图、新建知识点选项、内容元数据校验、分类页面和说明文档。领域数量根据配置自动显示。Netlify 下的旧 `/waves/` 和 `/modern/` 链接在下次部署后跳转知识库，不再保留空分类；旧个人记录继续读取，相关条目标为“待重新分类”，可编辑后选择合适的新领域。
+
+提交 GitHub 只同步源码。要让线上页面变化，还需经授权执行 Netlify 构建部署；搜索索引会随构建自动更新。域名和 DNS 不需要因为这次分类调整而变更。
+
 ## 项目结构与 AI 内容工作流
+
+课程入口与章节总览的数据、组件、知识条目关联及维护方式见 [课程架构说明](./docs/course-architecture.md)。首页仅展示五门基础课程；力学中的三个章节明确作为可调整的布局示例，等待正式大纲。
 
 `astro.config.mjs` 配置中文侧栏、主题、公式与站点路径；`src/content.config.ts` 加载并校验文章；`src/components/`、`src/styles/` 保留原有布局与外观；`src/lib/`、`src/scripts/` 实现学习工作台。依赖由 `package-lock.json` 锁定，目前为 Astro 7.4.0、Starlight 0.42.6 和 remark-math / rehype-katex / KaTeX。
 
