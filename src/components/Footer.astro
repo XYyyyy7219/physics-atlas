@@ -1,0 +1,8 @@
+---
+import DefaultFooter from '@astrojs/starlight/components/Footer.astro';
+import { sitePath } from '../lib/paths';
+const isWorkbench = ['知识库', '我的讲义', '学习地图'].includes(Astro.locals.starlightRoute.entry.data.title);
+const isCourse = Boolean(Astro.locals.starlightRoute.entry.data.course || Astro.locals.starlightRoute.entry.data.chapterPage || Astro.locals.starlightRoute.entry.data.lecture);
+---
+{Astro.locals.starlightRoute.entry.data.template !== 'splash' && !isWorkbench && !isCourse && <DefaultFooter><slot /></DefaultFooter>}
+<div class="atlas-footer"><span><strong>Physics Atlas</strong> · 让理解多一点连接</span><div><a href={sitePath('start/welcome/')}>关于图谱</a><span>保持好奇，持续探索。</span></div></div>

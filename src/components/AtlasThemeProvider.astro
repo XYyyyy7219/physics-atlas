@@ -1,0 +1,8 @@
+---
+import DefaultThemeProvider from '@astrojs/starlight/components/ThemeProvider.astro';
+---
+<script is:inline>
+  // Start in the reading theme; preserve an explicit light/auto selection.
+  try { if (!localStorage.getItem('starlight-theme')) localStorage.setItem('starlight-theme', 'dark'); } catch {}
+</script>
+<DefaultThemeProvider />

@@ -1,0 +1,14 @@
+---
+import { getChapter, chapterLabel, sectionLabel } from '../data/chapters';
+import { getLectures } from '../lib/lectures';
+import { sitePath } from '../lib/paths';
+interface Props { chapterId: string; sectionOrder?: number }
+const { chapterId, sectionOrder } = Astro.props;
+const chapter = getChapter(chapterId)!;
+const entries = await getLectures(chapterId);
+---
+<nav class="course-chapter-nav chapter-reading-nav" aria-label="章节导航" data-pagefind-ignore>
+  <p class="eyebrow">ON THIS CHAPTER</p><h2>章节导航</h2><a href={sitePath(chapter.page!)} aria-current={!sectionOrder?'page':undefined}>{chapterLabel(chapter.order)} {chapter.title}</a>
+  <ol>{entries.map(entry=><li><a href={sectionOrder ? sitePath(entry.id+'/') : '#section-'+entry.data.lecture!.order} data-chapter-link={!sectionOrder?'section-'+entry.data.lecture!.order:undefined} aria-current={sectionOrder===entry.data.lecture!.order?'page':undefined}><span>{sectionLabel(entry.data.lecture!.order)}</span>{entry.data.title}</a>{sectionOrder===entry.data.lecture!.order && <ul>{entry.data.lecture!.nodes.map(node=><li><a href={'#'+node.id}>{node.title}</a></li>)}</ul>}</li>)}</ol>
+  <p class="course-rail-note">已收录 {entries.length} / {chapter.totalSections} 节。后续讲义将继续补充。</p>
+</nav>
