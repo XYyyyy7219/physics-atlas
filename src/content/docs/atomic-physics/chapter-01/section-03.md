@@ -120,7 +120,7 @@ $$
 - **适用条件**：非相对论、弹性、有效点电荷库仑作用；先采用固定核及忽略电子的模型。
 - **常见误区**：把$b$当作实际最近距离；把大角散射画成撞击硬核；把非正碰最近点的速度也取零。
 - **检验理解**：为什么即使粒子始终没有碰到核表面，也能返回入射侧？
-- **相关知识**：[上一节的弥散模型检验](../section-02/#atomic.ch01.weak-scattering)、[偏转关系](#atomic.ch01.coulomb-deflection)、[反冲修正](#atomic.ch01.center-of-mass-scattering)。`atomic.ch01.rutherford-validity`为后续已规划节点，正文待建立。
+- **相关知识**：[上一节的弥散模型检验](../section-02/#atomic.ch01.weak-scattering)、[偏转关系](#atomic.ch01.coulomb-deflection)、[反冲修正](#atomic.ch01.center-of-mass-scattering)。后续见第四节的[公式适用范围](../section-04/#atomic.ch01.rutherford-validity)。
 
 **课程来源**：教材§3，印刷页12～13、图3.1及其四项假定；课件P42～43。正碰及非正碰最近距离由该模型的能量、角动量守恒展开。
 
@@ -623,7 +623,7 @@ $$
 - **适用条件**：均匀照射、已知有效靶区、正入射厚度；单次散射占主导且相关概率足够小；计数需处理效率和背景。
 - **常见误区**：截面就是概率；把某一角度的微分截面当作“所有大于该角度”的截面；比较不同靶材时只固定厚度而不检查$nt$；忽略接受立体角变化。
 - **检验理解**：同样的微分截面和入射粒子数，靶核面密度加倍、探测立体角减半，理想计数怎样改变？
-- **相关知识**：[单核截面](#atomic.ch01.differential-cross-section)、[反冲后的实验室截面](#atomic.ch01.recoil-cross-section)、[原子数与宏观量的联系](../section-01/#atomic.ch01.atomic-scale)。`atomic.ch01.experimental-tests`为下一节已规划、正文待建立的节点。
+- **相关知识**：[单核截面](#atomic.ch01.differential-cross-section)、[反冲后的实验室截面](#atomic.ch01.recoil-cross-section)、[原子数与宏观量的联系](../section-01/#atomic.ch01.atomic-scale)。实验比较见第四节的[计数规律检验](../section-04/#atomic.ch01.experimental-tests)。
 
 **课程来源**：教材§3，印刷页17～18、式（3-13）～（3-16）；课件P53～68。角域积分按课件P63～65的任务展开，比例例题数值核对P66中的图像公式；注量、效率和探测面投影是连接实际计数的补充解释。
 
@@ -762,7 +762,7 @@ $$
 - **适用条件**：非相对论弹性两体散射、靶核初始静止；本节点显式闭式限定为$m<M$的单值分支。
 - **常见误区**：只把$E_L$换成$E_C$便当作实验室截面；用正切值忽略背散射象限；把重核近似理解为严格无反冲。
 - **检验理解**：为什么同一组散射粒子，在两个坐标系中对应的“每单位立体角计数”可以不同？
-- **相关知识**：[折合质量与能量](#atomic.ch01.center-of-mass-scattering)、[微分截面的几何定义](#atomic.ch01.differential-cross-section)、[探测器计数](#atomic.ch01.detector-counts)。`atomic.ch01.light-target-deflection`、`atomic.ch01.experimental-tests`为已规划、正文待建立的节点。
+- **相关知识**：[折合质量与能量](#atomic.ch01.center-of-mass-scattering)、[微分截面的几何定义](#atomic.ch01.differential-cross-section)、[探测器计数](#atomic.ch01.detector-counts)。实验比较见第四节的[计数规律检验](../section-04/#atomic.ch01.experimental-tests)；`atomic.ch01.light-target-deflection`仍为已规划、正文待建立的节点。
 
 **课程来源**：教材§3，印刷页19中§3的部分、式（3-17），并衔接印刷页15～16的反冲讨论。速度合成、立体角导数及分支条件是为核对正文公式所作的教学展开；不声称已读取教材脚注所指的第三版附录1C。课件P42～68主要使用固定核形式。
 

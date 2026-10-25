@@ -160,7 +160,7 @@ $\theta$很小表示粒子大致保持原方向；$\theta>\pi/2$表示具有朝�
 - **适用条件**：结构推断建立在对入射束、靶和探测背景的可靠区分之上；反射比例依实验条件而变。
 - **常见误区**：把大角散射等同于撞上硬核表面；把$1/8000$当作普适常量；从核式结构成功直接推出经典电子轨道已被证实。
 - **检验理解**：为什么“大角事件很少”仍可能对模型构成决定性的限制？
-- **相关知识**：[弥散模型的假设](#atomic.ch01.thomson-model)、[弱偏转检验](#atomic.ch01.weak-scattering)；后续`atomic.ch01.experimental-tests`、`atomic.ch01.rutherford-validity`为已规划、正文待建立的节点。
+- **相关知识**：[弥散模型的假设](#atomic.ch01.thomson-model)、[弱偏转检验](#atomic.ch01.weak-scattering)；后续见第四节的[实验检验](../section-04/#atomic.ch01.experimental-tests)与[公式适用范围](../section-04/#atomic.ch01.rutherford-validity)。
 
 **课程来源**：教材§2，印刷页11；课件P30、P37、P40。闪烁观测功能与历史条件结合盖革—马斯顿原论文核对；表中“仍需研究”的内容是知识边界说明，不在本节提前展开。
 
