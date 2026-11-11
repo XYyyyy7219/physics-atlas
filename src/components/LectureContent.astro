@@ -1,6 +1,7 @@
 ---
 import DefaultMarkdownContent from '@astrojs/starlight/components/MarkdownContent.astro';
 import ReadingFrame from './ReadingFrame.astro';
+import ChapterReadingNav from './ChapterReadingNav.astro';
 import { getChapter, sectionLabel } from '../data/chapters';
 import { getLectures } from '../lib/lectures';
 import { sitePath } from '../lib/paths';
@@ -11,7 +12,10 @@ const previous = entries.find(entry => entry.data.lecture!.order === (lecture?.o
 const next = entries.find(entry => entry.data.lecture!.order === (lecture?.order || 0)+1);
 ---
 <DefaultMarkdownContent>{lecture ? <ReadingFrame>
-  <details class="chapter-mobile-outline"><summary>本节知识节点</summary>{lecture.nodes.map(node=><a href={'#'+node.id}>{node.title}</a>)}</details>
+  <details class="lecture-reader-outline" data-pagefind-ignore>
+    <summary>展开本章目录</summary>
+    <ChapterReadingNav chapterId={lecture.chapter} sectionOrder={lecture.order} />
+  </details>
   <slot />
   <nav class="lecture-reading-pagination" aria-label="讲义翻页">{previous && <a href={sitePath(previous.id+'/')}>← {sectionLabel(previous.data.lecture!.order)} {previous.data.title}</a>}<a href={sitePath(chapter!.page!)}>返回本章知识库</a>{next && <a href={sitePath(next.id+'/')}>{sectionLabel(next.data.lecture!.order)} {next.data.title} →</a>}</nav>
 </ReadingFrame> : <slot />}</DefaultMarkdownContent>

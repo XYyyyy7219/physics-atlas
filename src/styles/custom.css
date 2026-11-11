@@ -46,7 +46,35 @@ header.header { border-bottom: 1px solid var(--atlas-line); }
 .atlas-nav { display: flex; align-items: center; gap: 1.65rem; white-space: nowrap; }
 .atlas-nav a { font-size: .82rem; font-weight: 500; color: var(--atlas-muted); text-decoration: none; }
 .atlas-nav a:hover, .atlas-nav a[aria-current='page'] { color: var(--atlas-blue); }
-site-search button[data-open-modal] { border-radius: .45rem; border-color: var(--atlas-line); font-size: .8rem; background: var(--atlas-panel); }
+.atlas-site-search-button {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  width: min(23rem, 100%);
+  min-height: 2.4rem;
+  padding: .4rem .65rem;
+  border: 1px solid var(--atlas-line);
+  border-radius: .45rem;
+  background: var(--atlas-panel);
+  color: var(--atlas-muted);
+  font-size: .8rem;
+}
+.atlas-site-search-button:hover { color: var(--atlas-ink); border-color: var(--atlas-blue); }
+.atlas-site-search-button svg { flex: 0 0 auto; }
+.atlas-site-search-button kbd {
+  margin-inline-start: auto;
+  font: inherit;
+  font-size: .64rem;
+  white-space: nowrap;
+}
+@media (max-width: 49.99rem) {
+  .atlas-site-search-button { width: auto; }
+  .atlas-site-search-button kbd { display: none; }
+}
+@media (max-width: 26rem) {
+  .atlas-site-search-button { padding-inline: .55rem; }
+  .atlas-site-search-button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
 .sidebar-content { font-size: .87rem; }
 .sidebar-content a[aria-current='page'] { border-radius: .3rem; }
 .sl-markdown-content { line-height: 1.9; }

@@ -3,6 +3,33 @@ import { validateGraph, type KnowledgeNode } from './atlas-model';
 import { sitePath } from './paths';
 import { validateChapterAssignment } from './course-outline';
 import { getChapter } from '../data/chapters';
+import { markdownProcessor } from './markdown.mjs';
+
+export interface NodeReview {
+  label: string;
+  question: string;
+  review: string;
+}
+
+let nodeReviews: Promise<Record<string, NodeReview>> | undefined;
+export function getNodeReviews() {
+  return nodeReviews ??= renderNodeReviews();
+}
+
+async function renderNodeReviews() {
+  const entries = await getCollection('docs');
+  const renderer = await markdownProcessor.createRenderer({ syntaxHighlight: false });
+  const nodes = entries.flatMap(entry => entry.data.lecture?.nodes ?? []);
+  const reviews = await Promise.all(nodes.map(async node => [
+    node.id,
+    {
+      label: node.label,
+      question: (await renderer.render(node.summary)).code,
+      review: (await renderer.render(node.quickReview)).code,
+    },
+  ] as const));
+  return Object.fromEntries(reviews);
+}
 
 export async function getCatalog(): Promise<KnowledgeNode[]> {
   const entries = await getCollection('docs');
