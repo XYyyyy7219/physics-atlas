@@ -34,7 +34,7 @@ const sections = new Map(await Promise.all(chapters.map(async chapter => [chapte
       {chapter.requires.length > 0 && <div class="chapter-prerequisites"><span>{chapter.example ? '建议衔接（示例）' : '先修章节'}</span>{chapter.requires.map(id => { const pre = allChapters.find(item => item.id === id); return pre ? <a href={(pre.courseId === courseId ? '' : sitePath(pre.courseId + '/')) + '#' + chapterAnchor(pre)}>{pre.title} ↗</a> : null; })}</div>}
       {chapter.page ? <div class="course-published-chapter"><ul>{sections.get(chapter.id)!.map(entry=><li><a href={sitePath(entry.id+'/')}>{entry.data.title}<span>{entry.data.lecture!.nodes.length} 个节点 →</span></a></li>)}</ul><a class="atlas-button" href={sitePath(chapter.page)}>打开本章讲义 →</a></div> : chapterNodes(chapter.id).length > 0 ? <ul class="chapter-knowledge-list">{chapterNodes(chapter.id).map(node => <li><a href={node.url}><span>{kinds[node.kind]}</span>{node.title}<span aria-hidden="true">→</span></a></li>)}</ul> : <p class="chapter-content-note">知识条目尚未收录。这里将逐步连接概念、定律、推导与例题。</p>}
     </section>)}</div>
-  </> : <section class="course-awaiting" aria-labelledby="课程目录"><p class="eyebrow">COURSE OUTLINE</p><h2 id="课程目录">课程目录待整理</h2><p>课程入口已就绪。正式章节将根据后续提供的大纲与资料组织，当前不预设完整目录。</p><a href={sitePath()}>浏览其他基础课程 →</a></section>}
+  </> : <section class="course-awaiting" aria-labelledby="课程目录"><p class="eyebrow">COURSE OUTLINE</p><h2 id="课程目录">课程目录待整理</h2><p>课程入口已就绪。正式章节将根据后续提供的大纲与资料组织，当前不预设完整目录。</p></section>}
   {unassigned.length > 0 && <section class="course-unassigned"><h2 id="课程知识条目">课程知识条目</h2><ul>{unassigned.map(node => <li><a href={node.url}>{node.title}</a></li>)}</ul></section>}
   <div class="course-end-link"><span>查找已收录的知识，或整理自己的学习路径。</span><a href={sitePath('library/')}>打开知识库 →</a></div>
 </div>

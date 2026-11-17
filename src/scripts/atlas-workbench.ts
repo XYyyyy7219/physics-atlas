@@ -2,9 +2,11 @@ import { domains, retiredDomains, kinds, statuses, freshState, parseState, valid
 import { sitePath } from '../lib/paths';
 import { readNodeContent, readNodeReview } from './node-content';
 import { matchingNodes, matchingPages } from './site-search';
+import { bindKnowledgeCanvas, renderKnowledgeCanvas } from './knowledge-canvas';
 
 const escape = (value: unknown) => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
 const catalog: KnowledgeNode[] = JSON.parse(document.querySelector('[data-atlas-catalog]')?.textContent || '[]');
+const practiceBooks: { id: string; title: string; url: string; count: number }[] = JSON.parse(document.querySelector('[data-atlas-practice-books]')?.textContent || '[]');
 const key = `physics-atlas:workspace:v1:${import.meta.env.BASE_URL}`;
 let state = freshState(), storageError = '', undo: AtlasState | null = null;
 try { const raw = localStorage.getItem(key); if (raw) state = parseState(JSON.parse(raw)); validateGraph(allNodes(catalog, state)); }
@@ -29,6 +31,7 @@ let searchQuery = '';
 let searchTimer: number | undefined;
 let dragged = '', stagedImport: AtlasState | null = null;
 let zoom = 1, panX = 0, panY = 0;
+let editingLecture = view === 'editor', disposeCanvas: (() => void) | undefined;
 const nodes = () => allNodes(catalog, state);
 const findNode = (id: string) => nodes().find(n => n.id === id);
 const activeLecture = () => state.lectures.find(l => l.id === state.activeLecture) || state.lectures[0];
@@ -37,7 +40,7 @@ const statusOf = (id: string): Status => Object.hasOwn(state.progress,id) ? stat
 const domainTitle = (id: string) => domains.find(d => d.id === id)?.title || (retiredDomains.includes(id) ? '待重新分类' : id);
 
 function notify(message: string) {
-  const el = app?.querySelector('[data-atlas-notice]');
+  const el = app?.querySelector('[data-atlas-notice]') || document.querySelector('[data-atlas-global-notice]');
   if (el) el.innerHTML = `${escape(message)}${undo ? ' <button data-action="undo">撤销上一步</button>' : ''}`;
   if (dialog?.open && dialogNotice) dialogNotice.textContent = message;
 }
@@ -88,24 +91,15 @@ function positions(items: KnowledgeNode[]) {
   const rows = new Map<number,number>();
   return items.map(n => { const d = depth(n.id), row = rows.get(d) || 0; rows.set(d,row+1); return {node:n,x:32+d*222,y:36+row*104}; });
 }
-function graph(items: KnowledgeNode[], mini = false) {
+function graph(items: KnowledgeNode[]) {
   if (!items.length) {
-    const visibleDomains = domain === 'all' || mini ? domains : domains.filter(d=>d.id===domain);
-    return `<svg class="atlas-graph empty-graph" viewBox="0 0 650 390" role="img" aria-label="学习地图领域框架，尚无知识点"><defs><pattern id="${mini?'mini':'map'}-empty-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="currentColor" opacity=".09"/></pattern></defs><rect width="650" height="390" fill="url(#${mini?'mini':'map'}-empty-grid)"/>${visibleDomains.map((d,i)=>`<g class="domain-map-node" data-map-domain="${d.id}" tabindex="0" role="button" aria-label="${d.title}，待录入知识点" transform="translate(${52+(i%3)*200},${55+Math.floor(i/3)*105})"><rect width="155" height="65" rx="8"/><text x="77" y="28" text-anchor="middle">${d.title}</text><text class="node-subtitle" x="77" y="48" text-anchor="middle">待录入知识点</text></g>`).join('')}</svg>`;
+    const visibleDomains = domain === 'all' ? domains : domains.filter(d=>d.id===domain);
+    return `<svg class="atlas-graph empty-graph" viewBox="0 0 650 390" role="img" aria-label="学习地图领域框架，尚无知识点"><defs><pattern id="map-empty-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="currentColor" opacity=".09"/></pattern></defs><rect width="650" height="390" fill="url(#map-empty-grid)"/>${visibleDomains.map((d,i)=>`<g class="domain-map-node" data-map-domain="${d.id}" tabindex="0" role="button" aria-label="${d.title}，待录入知识点" transform="translate(${52+(i%3)*200},${55+Math.floor(i/3)*105})"><rect width="155" height="65" rx="8"/><text x="77" y="28" text-anchor="middle">${d.title}</text><text class="node-subtitle" x="77" y="48" text-anchor="middle">待录入知识点</text></g>`).join('')}</svg>`;
   }
   const layout = positions(items), byId = new Map(layout.map(p=>[p.node.id,p]));
   const width = Math.max(640,...layout.map(p=>p.x+212)), height = Math.max(340,...layout.map(p=>p.y+100));
-  const edges = layout.flatMap(p=>dependencies(p.node,p.node.variants[0]?.id).map(id=> { const pre=byId.get(id); return pre ? `<path class="map-edge" d="M${pre.x+176},${pre.y+32} C${pre.x+204},${pre.y+32} ${p.x-28},${p.y+32} ${p.x},${p.y+32}" marker-end="url(#${mini?'mini':'map'}-arrow)"/>` : ''; })).join('');
-  return `<svg class="atlas-graph" viewBox="0 0 ${width} ${height}" role="img" aria-label="知识前置关系图，连线由前置知识指向后续知识"><defs><pattern id="${mini?'mini':'map'}-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="currentColor" opacity=".09"/></pattern><marker id="${mini?'mini':'map'}-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10" fill="none" stroke="currentColor"/></marker></defs><rect width="${width}" height="${height}" fill="url(#${mini?'mini':'map'}-grid)"/><g data-map-transform transform="translate(${mini?0:panX} ${mini?0:panY}) scale(${mini?1:zoom})">${edges}${layout.map(p=>`<g class="knowledge-map-node ${statusOf(p.node.id)} ${state.currentNode===p.node.id?'is-current':''} ${selectedId===p.node.id?'is-selected':''}" transform="translate(${p.x} ${p.y})" data-map-node="${escape(p.node.id)}" tabindex="0" role="button" aria-label="${escape(p.node.title)}，${statuses[statusOf(p.node.id)]}${state.currentNode===p.node.id?'，当前位置':''}"><title>${escape(p.node.title)}</title><rect class="node-box" width="176" height="64" rx="8"/><circle cx="16" cy="22" r="4"/><text x="29" y="27">${escape(p.node.title.length>10?p.node.title.slice(0,10)+'…':p.node.title)}</text><text x="15" y="48" class="node-subtitle">${domainTitle(p.node.domain)} · ${kinds[p.node.kind]}</text>${state.currentNode===p.node.id?'<circle class="location-mark" cx="164" cy="0" r="7"/>':''}</g>`).join('')}</g></svg>`;
-}
-function renderMini() {
-  document.querySelectorAll<HTMLElement>('[data-atlas-mini]').forEach(el=> {
-    const current = state.currentNode ? findNode(state.currentNode) : undefined;
-    const nearby = current ? new Set([current.id, ...prerequisitesOf(current), ...dependentsOf(current.id).map(node => node.id)]) : null;
-    const visible = nearby ? nodes().filter(node => nearby.has(node.id)) : nodes();
-    el.innerHTML = `<a class="navigator-map" href="${sitePath('learning-map/')}${current?'?node='+encodeURIComponent(current.id):''}" aria-label="打开学习地图">${graph(visible,true)}</a><p>${current?`<span class="location-dot"></span>${escape(current.title)}`:'尚未选择学习位置'}</p>${legend()}<a class="navigator-open" href="${sitePath('learning-map/')}">打开完整地图 ↗</a>`;
-    el.querySelectorAll('[tabindex]').forEach(node=>{node.removeAttribute('tabindex');node.removeAttribute('role');});
-  });
+  const edges = layout.flatMap(p=>dependencies(p.node,p.node.variants[0]?.id).map(id=> { const pre=byId.get(id); return pre ? `<path class="map-edge" d="M${pre.x+176},${pre.y+32} C${pre.x+204},${pre.y+32} ${p.x-28},${p.y+32} ${p.x},${p.y+32}" marker-end="url(#map-arrow)"/>` : ''; })).join('');
+  return `<svg class="atlas-graph" viewBox="0 0 ${width} ${height}" role="img" aria-label="知识前置关系图，连线由前置知识指向后续知识"><defs><pattern id="map-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="currentColor" opacity=".09"/></pattern><marker id="map-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10" fill="none" stroke="currentColor"/></marker></defs><rect width="${width}" height="${height}" fill="url(#map-grid)"/><g data-map-transform transform="translate(${panX} ${panY}) scale(${zoom})">${edges}${layout.map(p=>`<g class="knowledge-map-node ${statusOf(p.node.id)} ${state.currentNode===p.node.id?'is-current':''} ${selectedId===p.node.id?'is-selected':''}" transform="translate(${p.x} ${p.y})" data-map-node="${escape(p.node.id)}" tabindex="0" role="button" aria-label="${escape(p.node.title)}，${statuses[statusOf(p.node.id)]}${state.currentNode===p.node.id?'，当前位置':''}"><title>${escape(p.node.title)}</title><rect class="node-box" width="176" height="64" rx="8"/><circle cx="16" cy="22" r="4"/><text x="29" y="27">${escape(p.node.title.length>10?p.node.title.slice(0,10)+'…':p.node.title)}</text><text x="15" y="48" class="node-subtitle">${domainTitle(p.node.domain)} · ${kinds[p.node.kind]}</text>${state.currentNode===p.node.id?'<circle class="location-mark" cx="164" cy="0" r="7"/>':''}</g>`).join('')}</g></svg>`;
 }
 function relationLinks(label: string, items: KnowledgeNode[]) {
   return `<section><h3>${label}</h3>${items.length
@@ -178,22 +172,93 @@ function renderMap() {
 }
 function renderLibrary() {
   const list = filtered();
-  return `<div class="workbench-intro"><div><p>YOUR KNOWLEDGE LIBRARY</p><h2>把知识连起来，也按自己的方式整理。</h2><span>选择知识点阅读、标记进度，或收入个人讲义。</span></div><a class="atlas-button" href="${sitePath('learning-map/')}">地图视图 ↗</a></div>${filters()}<div class="library-summary"><span>${list.length} 个知识点</span><span>${catalog.length} 个站点条目 · ${state.nodes.length} 个个人条目</span></div>${list.length?`<div class="node-library">${list.map(n=>`<article class="library-node"><div><span class="kind-badge">${kinds[n.kind]}</span><span class="library-domain">${domainTitle(n.domain)}${n.local?' · 个人':''}</span></div><h3><button data-action="show-node" data-id="${escape(n.id)}">${escape(n.title)}</button></h3><p>${escape(n.summary || '内容待补充。')}</p><div class="library-node-footer"><span><i class="status-dot ${statusOf(n.id)}"></i>${statuses[statusOf(n.id)]}</span><button data-action="add-to-lecture" data-id="${escape(n.id)}">＋ 加入讲义</button></div></article>`).join('')}</div>`:empty(nodes().length?'没有找到相关知识点':'知识库已就位，等待第一份内容。',nodes().length?'可以换一个关键词，或调整领域与状态筛选。':'无需先写好讲义。可以先建立知识点名称和前置关系，再逐步补充内容。','<button class="atlas-button primary" data-action="new-node">＋ 新建知识点</button>')}<div class="domain-shortcuts">${domains.map(d=>`<a href="${sitePath(d.id+'/')}">${d.title} ↗</a>`).join('')}</div>`;
+  const mastered = list.filter(node => statusOf(node.id) === 'mastered').length;
+  return `<div class="atlas-library-scene">
+    ${list.length ? renderKnowledgeCanvas(list, domainTitle, statusOf, state.currentNode, escape) : '<p class="atlas-knowledge-empty">没有符合条件的知识点。</p>'}
+    <details class="atlas-knowledge-filters" data-knowledge-filters><summary><span>${domain === 'all' ? '全部领域' : escape(domainTitle(domain))}</span><span>筛选与搜索</span></summary>
+      ${filters()}<a class="atlas-button" href="${sitePath('learning-map/')}">前后置关系图 →</a>
+    </details>
+    <div class="atlas-knowledge-legend">${legend()}<strong aria-label="已掌握数量">${mastered} / ${list.length}</strong></div>
+    ${list.length ? '<div class="atlas-knowledge-zoom" role="group" aria-label="知识库视角"><button type="button" class="atlas-button" data-partition-zoom="out" aria-label="缩小知识库">−</button><button type="button" class="atlas-button" data-partition-zoom="in" aria-label="放大知识库">＋</button><button type="button" class="atlas-button" data-partition-zoom="fit">全览</button></div>' : ''}
+  </div>`;
+}
+function renderShelfCalendar() {
+  const now = new Date();
+  const first = new Date(now.getFullYear(), now.getMonth(), 1);
+  const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const mondayOffset = (first.getDay() + 6) % 7;
+  const grid = Array.from({ length: mondayOffset + days }, (_, index) => {
+    const day = index + 1 - mondayOffset;
+    return day < 1 ? '<span></span>' : `<span${day === now.getDate() ? ' aria-current="date"' : ''}>${day}</span>`;
+  }).join('');
+  return `<aside class="atlas-shelf-calendar" aria-label="本月日历"><div><span>${now.getFullYear()} 年 ${now.getMonth() + 1} 月</span><strong>${now.getDate()}</strong><span>${new Intl.DateTimeFormat('zh-CN', { weekday: 'long' }).format(now)}</span></div><div class="atlas-calendar-grid">${[...'一二三四五六日'].map(day => `<b>${day}</b>`).join('')}${grid}</div></aside>`;
+}
+function renderShelf() {
+  const cards = state.lectures.map(lecture => `<button type="button" class="atlas-book-card" data-action="open-lecture" data-id="${escape(lecture.id)}">
+    <div class="atlas-personal-cover" aria-hidden="true"><small>PHYSICS ATLAS</small><strong>${escape(lecture.title)}</strong><i></i></div>
+    <div class="atlas-book-caption"><strong>${escape(lecture.title)}</strong><span>${lecture.items.length} 个知识点</span></div>
+  </button>`);
+  const workbooks = practiceBooks.filter(book => state.practiceBooks.includes(book.id));
+  const workbookCards = workbooks.map(book => `<div class="atlas-book-entry"><a class="atlas-book-card" href="${escape(book.url)}">
+    <div class="atlas-personal-cover is-practice" aria-hidden="true"><small>PHYSICS ATLAS</small><strong>${escape(book.title)}</strong><i></i></div>
+    <div class="atlas-book-caption"><strong>${escape(book.title)}</strong><span>${book.count} 道题</span></div></a>
+    <button type="button" class="text-button" data-action="remove-practice" data-id="${escape(book.id)}">移出书架</button></div>`);
+  const editor = view === 'editor';
+  return `<section class="atlas-shelf"><div class="atlas-shelf-title"><h2>${editor ? '编辑讲义' : '本地讲义'} <small>${cards.length} 本</small></h2><button type="button" class="atlas-button" data-action="new-lecture">＋ 新建讲义</button></div>
+    <div class="atlas-shelf-deck"><div class="atlas-books-grid">${cards.length ? cards.join('') : `<div class="atlas-shelf-empty"><p>这里还没有讲义。</p><a href="${sitePath('lectures/')}">浏览推荐讲义 →</a></div>`}</div>${editor ? '' : renderShelfCalendar()}</div></section>
+    ${editor ? '' : `<section class="atlas-shelf"><div class="atlas-shelf-title"><h2>本地题目册 <small>${workbooks.length} 本</small></h2></div><div class="atlas-shelf-deck"><div class="atlas-books-grid">${workbookCards.length ? workbookCards.join('') : `<div class="atlas-shelf-empty"><p>这里还没有题目册。</p><a href="${sitePath('lectures/')}#workbooks">浏览推荐题目册 →</a></div>`}</div></div></section>`}`;
 }
 function renderLectures() {
-  const l = activeLecture();
-  if (!l) return empty('你的讲义，由你编排。','从知识库挑选知识点，调整顺序、选择推导路径，组成自己的学习提纲。','<button class="atlas-button primary" data-action="new-lecture">＋ 新建我的讲义</button><a class="text-button" href="'+sitePath('library/')+'">先看看知识库 →</a>');
-  const missing = prerequisitePlan(l,nodes());
-  return `<div class="lecture-heading"><label class="atlas-field">当前讲义<select data-lecture-select aria-label="选择我的讲义">${state.lectures.map(x=>`<option value="${escape(x.id)}"${selected(x.id,l.id)}>${escape(x.title)}</option>`).join('')}</select></label><div><button class="text-button" data-action="rename-lecture">重命名</button><button class="atlas-button" data-action="new-lecture">＋ 新建讲义</button></div></div><div class="lecture-meta"><p>正文 ${l.items.filter(i=>i.placement==='body').length} 个条目 · 引用 ${l.items.filter(i=>i.placement==='reference').length} 个条目</p><div class="mode-switch" aria-label="讲义版本"><button data-action="mode" data-mode="teacher" aria-pressed="${l.mode==='teacher'}">教师版</button><button data-action="mode" data-mode="student" aria-pressed="${l.mode==='student'}">学生版</button></div></div>${l.items.length?`<ol class="lecture-items">${l.items.map((item,i)=>renderLectureItem(item,i)).join('')}</ol>`:empty('先放入一个知识点。','可以从知识库选择条目。条目顺序、推导路径和学习备注都能随时调整。','<button class="atlas-button" data-action="pick-nodes">从知识库添加</button>')}<div class="lecture-actions"><button class="atlas-button" data-action="pick-nodes">＋ 添加知识点</button><button class="atlas-button" data-action="prerequisites"${!missing.length?' disabled':''}>补齐前置${missing.length?' · '+missing.length:''}</button><button class="atlas-button primary" data-action="preview"${!l.items.length?' disabled':''}>讲义预览与打印</button><button class="text-button danger" data-action="delete-lecture">删除这份讲义</button></div>${missing.length?`<div class="prerequisite-alert"><strong>还有 ${missing.length} 个前置知识点未收入讲义</strong><p>可以保留当前提纲，或补齐直接前置与间接引用。</p><button class="text-button" data-action="prerequisites">查看前置关系 →</button></div>`:''}<p class="workbench-hint">拖动条目可排序，也可以使用上移、下移按钮。教师版在预览时显示学习备注；学生版隐藏备注。</p>`;
+  const lecture = activeLecture();
+  if (!lecture || !editingLecture) return renderShelf();
+  const missing = prerequisitePlan(lecture, nodes());
+  const bodyCount = lecture.items.filter(item => item.placement === 'body').length;
+  return `<div class="atlas-editor">
+    <aside class="atlas-editor-books" aria-label="我的讲义">
+      <button type="button" class="text-button" data-action="close-lecture-editor">← 返回书架</button>
+      <label class="atlas-field">当前讲义<select data-lecture-select>${state.lectures.map(book =>
+        `<option value="${escape(book.id)}"${selected(book.id, lecture.id)}>${escape(book.title)}</option>`).join('')}</select></label>
+      <button type="button" class="atlas-button" data-action="new-lecture">＋ 新建讲义</button>
+    </aside>
+    <section class="atlas-editor-content" aria-labelledby="atlas-editor-title">
+      <header>
+        <div><h2 id="atlas-editor-title">${escape(lecture.title)}</h2>
+          <p>正文 ${bodyCount} 个条目 · 引用 ${lecture.items.length - bodyCount} 个条目</p></div>
+        <button type="button" class="text-button" data-action="rename-lecture">重命名</button>
+      </header>
+      ${lecture.items.length
+        ? `<ol class="lecture-items">${lecture.items.map(renderLectureItem).join('')}</ol><p class="workbench-hint">拖动条目或使用上移、下移按钮排序。</p>`
+        : empty('先放入一个知识点。', '添加后可调整顺序、选择推导路径和填写学习备注。')}
+    </section>
+    <aside class="atlas-editor-tools" aria-label="讲义工具">
+      <h2>讲义工具</h2>
+      <button type="button" class="atlas-button" data-action="pick-nodes">＋ 添加知识点</button>
+      <button type="button" class="atlas-button" data-action="prerequisites"${missing.length ? '' : ' disabled'}>补齐前置${missing.length ? ` · ${missing.length}` : ''}</button>
+      <div class="mode-switch" role="group" aria-label="讲义版本">
+        <button type="button" data-action="mode" data-mode="teacher" aria-pressed="${lecture.mode === 'teacher'}">教师版</button>
+        <button type="button" data-action="mode" data-mode="student" aria-pressed="${lecture.mode === 'student'}">学生版</button>
+      </div>
+      <button type="button" class="atlas-button primary" data-action="preview"${lecture.items.length ? '' : ' disabled'}>预览与打印</button>
+      <button type="button" class="text-button danger" data-action="delete-lecture">删除这份讲义</button>
+    </aside>
+  </div>`;
 }
 function renderLectureItem(item: LectureItem, index: number) {
   const node = findNode(item.nodeId); if (!node) return '';
   return `<li draggable="true" data-item-id="${escape(item.nodeId)}"><div class="lecture-item-title"><span class="drag-handle" aria-hidden="true">⠿</span><span class="item-number">${String(index+1).padStart(2,'0')}</span><span class="kind-badge">${kinds[node.kind]}</span><button data-action="show-node" data-id="${escape(node.id)}">${escape(node.title)}</button><div class="item-order"><button data-action="move-up" data-id="${escape(node.id)}" aria-label="上移${escape(node.title)}"${index===0?' disabled':''}>↑</button><button data-action="move-down" data-id="${escape(node.id)}" aria-label="下移${escape(node.title)}"${index===activeLecture()!.items.length-1?' disabled':''}>↓</button><button data-action="remove-item" data-id="${escape(node.id)}" aria-label="移除${escape(node.title)}">×</button></div></div><div class="item-settings">${node.variants.length?`<label>推导路径<select data-item-field="variantId" data-id="${escape(node.id)}">${node.variants.map(v=>`<option value="${escape(v.id)}"${selected(v.id,item.variantId)}>${escape(v.title)}</option>`).join('')}</select></label>`:''}<label>放置位置<select data-item-field="placement" data-id="${escape(node.id)}"><option value="body"${selected(item.placement,'body')}>加入正文</option><option value="reference"${selected(item.placement,'reference')}>只引用</option></select></label><label>重要性<select data-item-field="importance" data-id="${escape(node.id)}">${[1,2,3].map(v=>`<option value="${v}"${Number(item.importance)===v?' selected':''}>${'★'.repeat(v)} ${['','补充','常用','核心'][v]}</option>`).join('')}</select></label></div><label class="atlas-field item-note">学习备注（教师版显示）<textarea rows="2" data-item-field="note" data-id="${escape(node.id)}" placeholder="写下提醒、讲解要点或待补充的内容…">${escape(item.note)}</textarea></label></li>`;
 }
 function render() {
-  if (screen) { try { screen.innerHTML = view==='map'?renderMap():view==='lectures'?renderLectures():renderLibrary(); } catch (error) { screen.innerHTML = empty('有一段知识联系需要修复。',escape((error as Error).message)); } }
-  const l = activeLecture(); document.querySelectorAll('[data-atlas-count]').forEach(el=>el.textContent=String(l?.items.length||0));
-  renderMini();
+  if (screen) {
+    const filtersOpen = Boolean(screen.querySelector('[data-knowledge-filters][open]'));
+    disposeCanvas?.();
+    try {
+      screen.innerHTML = view === 'map' ? renderMap() : view === 'library' ? renderLibrary() : renderLectures();
+      if (view === 'library') {
+        screen.querySelector('[data-knowledge-filters]')?.toggleAttribute('open', filtersOpen);
+        disposeCanvas = bindKnowledgeCanvas(screen);
+      }
+    } catch (error) { screen.innerHTML = empty('有一段知识联系需要修复。', escape((error as Error).message)); }
+  }
   app?.querySelectorAll<HTMLElement>('[data-node-progress]').forEach(el => { el.textContent = statuses[statusOf(el.dataset.nodeProgress!)]; });
   app?.querySelectorAll<HTMLElement>('[data-progress-ids]').forEach(el => { const ids: string[] = JSON.parse(el.dataset.progressIds || '[]'); const mastered = ids.filter(id=>statusOf(id)==='mastered').length; el.querySelector('[data-reader-progress]')!.textContent = `已掌握 ${mastered} / ${ids.length} 个知识节点`; const progress = el.querySelector('progress'); if (progress) progress.value = mastered; });
   app?.querySelectorAll<HTMLButtonElement>('[data-master-button], .node-reading-actions [data-action="master-node"]').forEach(button => { const mastered = statusOf(button.dataset.id!) === 'mastered'; button.textContent = mastered ? '取消已掌握' : '标记已掌握'; button.setAttribute('aria-pressed', String(mastered)); });
@@ -206,7 +271,10 @@ function render() {
   });
   app?.querySelectorAll<HTMLButtonElement>('[data-action="save-chapter"]').forEach(button => {
     const saved = state.lectures.some(lecture => lecture.id === 'chapter-' + button.dataset.id);
-    button.textContent = saved ? '打开我的讲义' : '加入我的讲义';
+    button.textContent = saved ? '打开我的书架' : '添加到我的书架';
+  });
+  app?.querySelectorAll<HTMLButtonElement>('[data-action="save-practice"]').forEach(button => {
+    button.textContent = state.practiceBooks.includes(button.dataset.id!) ? '打开我的书架' : '添加到我的书架';
   });
 }
 function openModal(title: string, body: string) {
@@ -318,7 +386,7 @@ function downloadBackup() {
 }
 function exportBackup() {
   const raw=localStorage.getItem(key) || JSON.stringify(state);
-  openModal('导出个人备份',`<p>备份包含个人知识点、讲义、学习进度和当前位置。可以下载文件，也可以复制下面的全部文字保存。</p><label class="atlas-field">备份内容<textarea readonly rows="8" data-backup-text>${escape(raw)}</textarea></label><div class="modal-actions"><button class="atlas-button primary" data-action="download-backup">下载备份文件</button><button class="atlas-button" data-action="copy-backup">复制备份内容</button></div>`);
+  openModal('导出个人备份',`<p>备份包含个人知识点、讲义、题目册、学习进度和当前位置。可以下载文件，也可以复制下面的全部文字保存。</p><label class="atlas-field">备份内容<textarea readonly rows="8" data-backup-text>${escape(raw)}</textarea></label><div class="modal-actions"><button class="atlas-button primary" data-action="download-backup">下载备份文件</button><button class="atlas-button" data-action="copy-backup">复制备份内容</button></div>`);
 }
 function importBackup() {
   openModal('导入个人备份','<p>选择之前保存的 JSON 文件，或把备份文字粘贴到下面。确认后才会替换当前个人记录。</p><form data-import-form><label class="atlas-field">粘贴备份内容<textarea name="backup" rows="7" placeholder="在这里粘贴备份文字" required></textarea></label><div class="modal-actions"><button class="atlas-button primary" type="submit">检查并恢复</button><button class="atlas-button" type="button" data-action="choose-import-file">选择备份文件</button></div></form>');
@@ -327,7 +395,7 @@ function prepareImport(raw: string) {
   const candidate=parseState(JSON.parse(raw));const known=new Set(allNodes(catalog,candidate).map(n=>n.id));validateGraph(allNodes(catalog,candidate));
   if(candidate.lectures.some(l=>l.items.some(i=>!known.has(i.nodeId))))throw new Error('备份引用了当前站点尚未收录的知识点，请先补充相应内容。');
   stagedImport=candidate;
-  openModal('恢复个人备份？',`<p>备份中有 ${candidate.nodes.length} 个个人知识点和 ${candidate.lectures.length} 份讲义。</p><p>这会替换当前浏览器中的个人知识点、讲义和学习进度。建议先导出当前记录。导入后也可以撤销上一步。</p><div class="modal-actions"><button class="atlas-button primary" data-action="confirm-import">确认恢复</button><button class="atlas-button" data-action="close-dialog">取消</button></div>`);
+  openModal('恢复个人备份？',`<p>备份中有 ${candidate.nodes.length} 个个人知识点、${candidate.lectures.length} 份讲义和 ${candidate.practiceBooks.length} 本题目册。</p><p>这会替换当前浏览器中的个人知识点、书架和学习进度。也可以撤销此次导入。</p><div class="modal-actions"><button class="atlas-button primary" data-action="confirm-import">确认恢复</button><button class="atlas-button" data-action="close-dialog">取消</button></div>`);
 }
 function selectNode(id: string) { selectedId=id; update(next=>{next.currentNode=id;}); }
 function setMapTransform() {
@@ -345,7 +413,7 @@ document.addEventListener('click', event => {
   const target = (event.target as Element).closest<HTMLElement>('[data-action],[data-map-node],[data-map-domain],[data-atlas-open-search]');
   if (!target) return;
   if (target.hasAttribute('data-atlas-open-search')) { openSearch(); return; }
-  if (!target.closest('[data-atlas-app], [data-atlas-dialog]')) return;
+  if (!target.closest('[data-atlas-app], [data-atlas-dialog], [data-atlas-sidebar-tools], [data-atlas-global-notice]')) return;
   const id=target.dataset.id||'';
   if (target.dataset.mapNode) { openMapNode(target.dataset.mapNode); return; }
   if (target.dataset.mapDomain) { domain = target.dataset.mapDomain; render(); return; }
@@ -355,6 +423,18 @@ document.addEventListener('click', event => {
     case 'add-variant': modal?.querySelector('[data-variant-rows]')?.insertAdjacentHTML('beforeend',variantRow(undefined,modal?.querySelector<HTMLElement>('[data-node-form]')?.dataset.id)); break;
     case 'remove-variant': target.closest('[data-variant-row]')?.remove(); break;
     case 'new-lecture': newLecture(); break;
+    case 'open-lecture':
+      if (state.lectures.some(lecture => lecture.id === id)) {
+        editingLecture = true;
+        if (update(next => { next.activeLecture = id; })) screen?.querySelector<HTMLElement>('[data-action="close-lecture-editor"]')?.focus();
+        else editingLecture = false;
+      }
+      break;
+    case 'close-lecture-editor':
+      editingLecture = false;
+      render();
+      [...(screen?.querySelectorAll<HTMLElement>('[data-action="open-lecture"]') ?? [])].find(button => button.dataset.id === activeLecture()?.id)?.focus();
+      break;
     case 'rename-lecture': newLecture('',true); break;
     case 'close-dialog': dialog?.close(); break;
     case 'show-node':
@@ -365,6 +445,12 @@ document.addEventListener('click', event => {
     case 'locate': selectNode(id); notify('学习位置已更新。'); break;
     case 'add-to-lecture': addToLecture(id); break;
     case 'save-chapter': saveChapter(target); break;
+    case 'save-practice':
+      if (practiceBooks.some(book => book.id === id) && (state.practiceBooks.includes(id) || update(next => { next.practiceBooks.push(id); }))) location.assign(sitePath('my-lectures/'));
+      break;
+    case 'remove-practice':
+      update(next => { next.practiceBooks = next.practiceBooks.filter(bookId => bookId !== id); }, '题目册已移出书架。');
+      break;
     case 'focus-map': mapFocus = !mapFocus; query = ''; zoom = 1; panX = panY = 0; render(); break;
     case 'all-chapters': mapChapter = undefined; mapFocus = false; zoom = 1; panX = panY = 0; render(); break;
     case 'master-node': if (findNode(id)) update(next=>{next.progress[id]=statusOf(id)==='mastered'?'learning':'mastered'; next.currentNode=id;}, statusOf(id)==='mastered'?'已恢复为学习中。':'已标记为掌握。'); break;
@@ -384,7 +470,7 @@ document.addEventListener('click', event => {
     case 'download-backup': downloadBackup();break;
     case 'copy-backup': {const text=modal?.querySelector<HTMLTextAreaElement>('[data-backup-text]')?.value||''; void navigator.clipboard.writeText(text).then(()=>notify('备份内容已复制。')).catch(()=>notify('请选中备份内容，按 Ctrl+C 复制。'));break;}
     case 'import': importBackup();break;
-    case 'choose-import-file': app?.querySelector<HTMLInputElement>('[data-atlas-import]')?.click();break;
+    case 'choose-import-file': document.querySelector<HTMLInputElement>('[data-atlas-import]')?.click();break;
     case 'confirm-import': if(stagedImport) {commit(stagedImport,'备份已恢复。');stagedImport=null;dialog?.close();}break;
     case 'undo': if(undo) {const previous=undo; if(commit(previous)){undo=null;notify('已撤销上一步。');}} break;
   }
@@ -405,7 +491,14 @@ document.addEventListener('submit',event=> {
       if(form.dataset.rename==='true') { changeLecture(l=>{l.title=title;},'讲义名称已保存。'); dialog?.close(); }
       else {
         const id = newId('lecture'), node = findNode(form.dataset.node || '');
-        if (update(next => { next.lectures.push({ id, title, mode: 'student', items: node ? [newItem(node)] : [] }); next.activeLecture = id; }, '讲义已创建。')) dialog?.close();
+        if (update(next => { next.lectures.push({ id, title, mode: 'student', items: node ? [newItem(node)] : [] }); next.activeLecture = id; }, '讲义已创建。')) {
+          dialog?.close();
+          if (view === 'lectures' || view === 'editor') {
+            editingLecture = true;
+            render();
+            screen?.querySelector<HTMLElement>('[data-action="close-lecture-editor"]')?.focus();
+          }
+        }
       }
     } else if(form.hasAttribute('data-pick-form')) {
       const chosen=data.getAll('node').map(String);changeLecture(l=>{chosen.forEach(id=>{const node=findNode(id);if(node&&!l.items.some(i=>i.nodeId===id))l.items.push(newItem(node));});},`已加入 ${chosen.length} 个知识点。`);dialog?.close();
@@ -418,7 +511,7 @@ document.addEventListener('submit',event=> {
 });
 document.addEventListener('change',async event=> {
   const el=event.target as HTMLInputElement;
-  if (!el.closest('[data-atlas-app], [data-atlas-dialog]')) return;
+  if (!el.closest('[data-atlas-app], [data-atlas-dialog], [data-atlas-import]')) return;
   if(el.matches('[data-filter="domain"]')) {domain=el.value;mapChapter=undefined;mapFocus=false;zoom=1;panX=panY=0;render();}
   else if(el.matches('[data-filter="status"]')) {statusFilter=el.value;render();}
   else if(el.hasAttribute('data-node-status')) {const id=el.dataset.nodeStatus!;update(next=>{next.progress[id]=el.value as Status;},'学习状态已保存。');}

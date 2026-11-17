@@ -4,5 +4,6 @@ import { getChapter, getChapters } from '../data/chapters';
 const data = Astro.locals.starlightRoute.entry.data;
 const courseId = data.course || getChapter(data.chapterPage || data.lecture?.chapter)?.courseId;
 const hasChapters = courseId && getChapters(courseId).length > 0;
+const showRail = hasChapters && !data.lecture && !data.lectureBook;
 ---
-{courseId ? <div class:list={['course-page-columns', { 'has-chapters': hasChapters && !data.lecture, 'is-lecture-reader': data.lecture }]}><div class="course-main-pane"><slot /></div>{hasChapters && !data.lecture && <aside class="course-right-rail"><slot name="right-sidebar" /></aside>}</div> : <DefaultColumns><slot /><Fragment slot="right-sidebar"><slot name="right-sidebar" /></Fragment></DefaultColumns>}
+{courseId ? <div class:list={['course-page-columns', { 'has-chapters': showRail, 'is-lecture-reader': data.lecture }]}><div class="course-main-pane"><slot /></div>{showRail && <aside class="course-right-rail"><slot name="right-sidebar" /></aside>}</div> : <DefaultColumns><slot /><Fragment slot="right-sidebar"><slot name="right-sidebar" /></Fragment></DefaultColumns>}

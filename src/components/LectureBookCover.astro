@@ -1,0 +1,13 @@
+---
+import AtomicCover from './AtomicCover.astro';
+import type { Course } from '../data/courses';
+import '../styles/lecture-book.css';
+
+const { course } = Astro.props as { course: Course };
+---
+{course.id === 'atomic-physics' ? <AtomicCover /> : <div class="book-cover book-cover--formula" aria-hidden="true">
+  <span>PHYSICS ATLAS</span>
+  <strong>{course.title}</strong>
+  <div class="cover-formula">{course.formula}</div>
+  <small>{course.en}</small>
+</div>}

@@ -16,6 +16,7 @@ export const courses: readonly Course[] = [
   { id: 'electromagnetism', order: 3, title: '电磁学', en: 'ELECTROMAGNETISM', description: '看不见的场，连接电荷与电流，揭示电与磁的统一。', formula: '∇ · E = ρ/ε₀', topics: '电场 / 磁场 / 电磁感应', goal: '从电荷与电流的相互作用认识场，建立电场、磁场与电磁感应之间的联系。' },
   { id: 'optics', order: 4, title: '光学', en: 'OPTICS', description: '沿着光的路径，探索成像规律与波动的精巧结构。', formula: 'n₁ sin θ₁ = n₂ sin θ₂', topics: '几何光学 / 波动光学', goal: '根据现象选择光线或波动模型，理解成像、干涉、衍射与偏振的基本问题。' },
   { id: 'atomic-physics', order: 5, title: '原子物理学', en: 'ATOMIC PHYSICS', description: '从原子的结构与光谱出发，探索微观世界的量子规律。', formula: 'ΔE = hν', topics: '原子结构 / 原子光谱 / 量子规律', goal: '以原子结构与光谱实验为线索，理解微观模型及其所揭示的量子规律。' },
+  { id: 'mathematical-physics', order: 6, title: '复变函数与数学物理方法', en: 'MATHEMATICAL PHYSICS', description: '从复变函数的几何与解析性出发，学习解决数学物理问题的方法。', formula: 'z = x + iy', topics: '复变函数 / 积分变换 / 数学物理方程', goal: '运用复分析、积分变换与本征函数方法建立并求解物理模型。' },
 ];
 
 export const orderedCourses = [...courses].sort((a, b) => a.order - b.order);

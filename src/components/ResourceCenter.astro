@@ -1,0 +1,48 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+import { sitePath } from '../lib/paths';
+
+import { getPublishedLectureBooks } from '../lib/lectures';
+
+const books = await getPublishedLectureBooks();
+const resources = [
+  ...books.flatMap(({ course }) => [
+    { title: course.title, path: course.id + '/', type: '在线讲义', icon: 'open-book' },
+    { title: course.title + '打印版', path: course.id + '/print/', type: '可保存为 PDF', icon: 'document' },
+  ] as const),
+  { title: '普通物理学习路线', path: 'start/roadmap/', type: '学习指南', icon: 'list-format' },
+] as const;
+---
+<section class="atlas-resource-list" aria-labelledby="resource-list-heading">
+  <h2 id="resource-list-heading">全部资源 <small>{resources.length} 项</small></h2>
+  <table>
+    <thead>
+      <tr><th scope="col" aria-sort="none"><button type="button" data-sort-resources>名称 <span aria-hidden="true">↕</span></button></th><th scope="col">类型</th></tr>
+    </thead>
+    <tbody>
+      {resources.map(resource => (
+        <tr>
+          <td><a href={sitePath(resource.path)}><span class:list={['atlas-file-icon', { 'is-print': resource.icon === 'document' }]}><Icon name={resource.icon} size="1.25rem" /></span><strong>{resource.title}</strong></a></td>
+          <td>{resource.type}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</section>
+<script>
+  const sort = document.querySelector<HTMLButtonElement>('[data-sort-resources]');
+  const rows = sort?.closest('table')?.tBodies[0];
+  const heading = sort?.closest('th');
+  const collator = new Intl.Collator('zh-CN');
+  if (sort && rows && heading) {
+    sort.addEventListener('click', () => {
+      const descending = heading.getAttribute('aria-sort') === 'ascending';
+      const ordered = Array.from(rows.rows).sort((a, b) =>
+        collator.compare(a.cells[0].textContent.trim(), b.cells[0].textContent.trim())
+      );
+      rows.append(...(descending ? ordered.reverse() : ordered));
+      heading.setAttribute('aria-sort', descending ? 'descending' : 'ascending');
+      sort.querySelector('span')!.textContent = descending ? '↓' : '↑';
+    });
+  }
+</script>

@@ -82,13 +82,8 @@
 .workbench-notice:empty { display:none; }
 .workbench-notice { padding:.7rem 1rem; margin-bottom:1rem; font-size:.76rem; background:var(--atlas-panel); border-left:2px solid var(--atlas-blue); border-radius:4px; }
 .workbench-notice button { border:0; background:none; color:var(--atlas-blue); font-size:.72rem; margin-left:.7rem; }
-.lecture-heading { display:flex; justify-content:space-between; align-items:end; gap:1rem; }
-.lecture-heading > label { flex:1; max-width:24rem; margin:0; }
-.lecture-heading > div { display:flex; align-items:center; gap:.8rem; }
 .atlas-field { display:flex; flex-direction:column; gap:.35rem; font-size:.73rem; color:var(--atlas-muted); margin:1rem 0; }
 .atlas-field small { font-size:.65rem; }
-.lecture-meta { display:flex; justify-content:space-between; gap:.75rem; align-items:center; padding:1.2rem 0; }
-.lecture-meta > p { font-size:.7rem; color:var(--atlas-muted); }
 .mode-switch { display:flex; border:1px solid var(--atlas-line); border-radius:20px; background:var(--atlas-panel); padding:3px; }
 .mode-switch button { border:0; background:none; color:var(--atlas-muted); padding:.3rem .65rem; border-radius:16px; font-size:.7rem; }
 .mode-switch button[aria-pressed='true'] { background:var(--atlas-paper); color:var(--atlas-blue); box-shadow:0 1px 4px #0001; }
@@ -105,11 +100,6 @@
 .item-settings select { font-size:.73rem; width:100%; }
 .atlas-field.item-note { margin:.9rem 0 0 1.7rem; font-size:.65rem; }
 .item-note textarea { font-size:.75rem; }
-.lecture-actions { display:flex; flex-wrap:wrap; align-items:center; gap:.6rem; margin-top:1rem; }
-.lecture-actions .danger { margin-left:auto; }
-.prerequisite-alert { border:1px solid var(--sl-color-accent); padding:1rem; border-radius:7px; margin-top:1.2rem; background:var(--atlas-panel); }
-.prerequisite-alert strong { font-size:.82rem; }
-.prerequisite-alert p { font-size:.74rem; color:var(--atlas-muted); margin:.35rem 0; }
 .workbench-hint { font-size:.7rem; color:var(--atlas-muted); margin-top:1rem!important; }
 .atlas-dialog { border:1px solid var(--atlas-line); border-radius:10px; padding:1.4rem; width:min(650px,calc(100vw - 2rem)); max-height:85vh; color:var(--atlas-ink); background:var(--atlas-paper); box-shadow:0 16px 80px #0003; }
 .atlas-dialog::backdrop { background:#121b3066; backdrop-filter:blur(3px); }
@@ -162,25 +152,13 @@
 .teacher-note { background:var(--atlas-panel); padding:.8rem; border-left:2px solid var(--atlas-blue); margin-top:1rem; }
 .teacher-note span { font-size:.65rem; color:var(--atlas-blue); }
 .teacher-note p { font-size:.75rem; margin-top:.4rem!important; }
-.position-navigator { margin-top:2rem; padding-top:1rem; border-top:1px solid var(--atlas-line); }
-.navigator-title { display:flex; justify-content:space-between; font-size:.72rem; color:var(--atlas-muted); margin-bottom:.7rem; }
-.navigator-title strong { font-weight:500; }
-.navigator-map { display:block; background:var(--atlas-panel); border:1px solid var(--atlas-line); border-radius:5px; padding:.25rem; }
-.navigator-map .atlas-graph { height:140px; object-fit:contain; }
-.position-navigator p { font-size:.68rem; color:var(--atlas-muted); overflow-wrap:anywhere; margin:.6rem 0; }
-.position-navigator .map-legend { font-size:.58rem; gap:.45rem .7rem; }
-.navigator-open { display:block; font-size:.66rem; color:var(--atlas-blue); text-decoration:none; margin-top:.7rem; }
-.navigator-map [tabindex] { pointer-events:none; }
-.location-dot { display:inline-block; width:6px; height:6px; background:#d3825d; border-radius:50%; margin-right:.35rem; }
 .category-workbench-link { display:block; color:var(--atlas-blue); font-size:.75rem; text-decoration:none; margin-top:.7rem; }
 /* 应用页面仍沿用 Starlight 的目录和导航，主工作区适当加宽。 */
 html:has([data-atlas-app]) { --sl-content-width:70rem; }
 html:has([data-atlas-app]) .content-panel:has(h1) { padding-bottom:1.3rem; }
 @media(min-width:50rem) {
-  .sidebar-content:has(.position-navigator) { overflow:hidden; min-height:0; gap:0; }
+  .sidebar-content:has(.atlas-sidebar-links) { overflow:hidden; min-height:0; gap:0; }
   .atlas-sidebar-links { min-height:0; overflow-y:auto; flex:1; padding-bottom:.5rem; }
-  .position-navigator { flex-shrink:0; margin-top:.7rem; padding-top:.8rem; }
-  .navigator-map .atlas-graph { height:110px; }
 }
 @media(max-width:75rem) { .learning-map-layout { grid-template-columns:minmax(0,1fr) 210px; } .atlas-nav { gap:.9rem; } }
 @media(max-width:62rem) { .learning-map-layout { grid-template-columns:1fr; } .map-detail { border-left:0; border-top:1px solid var(--atlas-line); } .map-canvas { min-height:320px; } }
@@ -190,8 +168,6 @@ html:has([data-atlas-app]) .content-panel:has(h1) { padding-bottom:1.3rem; }
   .sl-markdown-content .workbench-intro h2 { font-size:1.1rem; }
   .atlas-filters { gap:.5rem; }.atlas-search{flex-basis:100%;}.atlas-filters select{flex:1;}.atlas-filters>.atlas-button{flex-basis:100%;}
   .node-library { grid-template-columns:1fr; }.library-summary{flex-direction:column;gap:.2rem;}
-  .lecture-heading { flex-direction:column; align-items:stretch; }.lecture-heading>div{justify-content:space-between;}
-  .lecture-meta{align-items:start;}.lecture-meta>p{max-width:11rem;}
   .item-settings,.atlas-field.item-note { padding-left:0;margin-left:0; }.lecture-item-title{gap:.3rem;}.item-number{display:none;}.item-order button{padding:.15rem .25rem;}
   .personal-storage { flex-direction:column; align-items:start; }.atlas-empty{padding:2rem 1rem;}.atlas-empty .text-button{display:block;margin:.7rem 0 0;}
   .form-columns{grid-template-columns:1fr;gap:0;}.atlas-dialog{padding:1rem;}.lecture-print{padding:1rem;}
@@ -203,5 +179,5 @@ html:has([data-atlas-app]) .content-panel:has(h1) { padding-bottom:1.3rem; }
   body[data-atlas-print] [data-atlas-app],
   body[data-atlas-print] :is(.atlas-footer,.atlas-dialog-title,.preview-tools,.dialog-notice) { display:none!important; }
   body[data-atlas-print] .atlas-dialog { display:block; position:static; width:100%; max-width:none; max-height:none; padding:0; overflow:visible; box-shadow:none; border:0; }
-  body[data-atlas-print] .lecture-print { padding:0;border:0; }.preview-section{break-inside:avoid-page;}.position-navigator{display:none!important;}
+  body[data-atlas-print] .lecture-print { padding:0;border:0; }.preview-section{break-inside:avoid-page;}
 }

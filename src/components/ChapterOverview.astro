@@ -20,6 +20,7 @@ const pending = Array.from({ length: total }, (_, index) => index + 1)
   </div>
   {entries[0] && <nav class="chapter-actions" aria-label="本章讲义">
     <a class="atlas-button primary" href={sitePath(entries[0].id + '/')} data-resume-chapter={chapterId}>开始阅读</a>
+    <a class="atlas-button" href={sitePath(chapter.courseId + '/')}>课程讲义与目录</a>
     <button class="atlas-button" type="button" data-action="save-chapter" data-id={chapterId} data-chapter-title={chapter.title} data-chapter-nodes={JSON.stringify(nodeIds)}>加入我的讲义</button>
     <a class="atlas-button" href={sitePath('learning-map/') + '?chapter=' + encodeURIComponent(chapterId)}>本章学习地图</a>
     {chapter.practicePage && <a class="atlas-button" href={sitePath(chapter.practicePage)}>本章练习</a>}
@@ -40,7 +41,7 @@ const pending = Array.from({ length: total }, (_, index) => index + 1)
         <a href={sitePath(entry.id + '/')}>阅读本节 ↗</a>
       </header>
       <ul class="lecture-node-menu" aria-label={sectionLabel(lecture.order) + '知识节点'}>
-        {lecture.nodes.map(node => <li class="lecture-node-row">
+        {lecture.nodes.map(node => <li class="lecture-node-row" id={node.id}>
           <a class="lecture-node-choice" href={sitePath(entry.id + '/') + '#' + node.id} data-action="show-node" data-id={node.id}>
             <span class:list={['lecture-kind-dot', node.kind]} aria-hidden="true"></span>
             <span>{node.title}</span>

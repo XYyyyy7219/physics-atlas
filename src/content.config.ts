@@ -8,6 +8,7 @@ import { getChapter } from './data/chapters';
 export const collections = {
   docs: defineCollection({ loader: docsLoader(), schema: docsSchema({ extend: z.object({
     course: z.string().refine(id => Boolean(getCourse(id)), '课程 ID 不存在').optional(),
+    lectureBook: z.boolean().optional(),
     chapterPage: z.string().refine(id => Boolean(getChapter(id)), '章节 ID 不存在').optional(),
     lecture: z.object({
       id: z.string(), chapter: z.string().refine(id => Boolean(getChapter(id)), '章节 ID 不存在'), order: z.number().int().positive(),
@@ -15,7 +16,7 @@ export const collections = {
     }).optional(),
     atlas: z.object({
       id: z.string().min(1).refine(id => !id.startsWith('local-'), 'local- 为个人条目保留'),
-      domain: z.enum(['math', ...courses.map(course => course.id)]),
+      domain: z.enum(courses.map(course => course.id)),
       chapter: z.string().optional(),
       kind: z.enum(['concept', 'law', 'method', 'example']).default('concept'),
       requires: z.array(z.string()).default([]),

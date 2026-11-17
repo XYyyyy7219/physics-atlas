@@ -1,0 +1,82 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+import { getPracticeBooks } from '../lib/practice-books';
+const books = await getPracticeBooks();
+const byCourse = Object.entries(Object.groupBy(books, book => book.course));
+---
+<div class="atlas-browser-list" data-question-browser>
+  <header class="atlas-browser-toolbar">
+    <nav aria-label="题库路径" data-bank-path><button type="button" data-bank-home>全部题目</button><span data-bank-location></span></nav>
+    <label><span class="sr-only">搜索题目</span><input type="search" placeholder="搜索题干、题名或题号" data-bank-search /></label>
+  </header>
+  <div data-bank-courses>
+    {byCourse.map(([course]) => <button type="button" class="atlas-browser-row" data-bank-course={course}>
+      <span class="atlas-file-icon is-folder" aria-hidden="true"></span><strong>{course}题库</strong><Icon name="right-caret" />
+    </button>)}
+  </div>
+  <div data-bank-folders hidden>
+    {books.map(book => <button type="button" class="atlas-browser-row" data-bank-book={book.id} data-bank-course-id={book.course}>
+      <span class="atlas-file-icon is-folder" aria-hidden="true"></span><strong>{book.title}</strong><small>{book.questions.length} 道题</small><Icon name="right-caret" />
+    </button>)}
+  </div>
+  <div data-bank-questions hidden>
+    {books.flatMap(book => book.questions.map((question, index) => <a class="atlas-browser-row" href={question.url} data-bank-question={book.id} data-bank-course-id={book.course} data-bank-match={`${index + 1} ${book.title} ${question.title} ${question.prompt}`}>
+      <span class="atlas-file-icon" aria-hidden="true"><Icon name="document" /></span><strong>{question.title}</strong><small>{book.title} · 第 {index + 1} 题</small><Icon name="right-caret" />
+    </a>))}
+  </div>
+  <p class="atlas-browser-empty" data-bank-empty hidden>没有找到符合条件的题目。</p>
+</div>
+
+<script>
+  const bank = document.querySelector<HTMLElement>('[data-question-browser]');
+  if (bank) {
+    const search = bank.querySelector<HTMLInputElement>('[data-bank-search]')!;
+    const breadcrumb = bank.querySelector<HTMLElement>('[data-bank-location]')!;
+    const courses = bank.querySelector<HTMLElement>('[data-bank-courses]')!;
+    const folders = bank.querySelector<HTMLElement>('[data-bank-folders]')!;
+    const questions = bank.querySelector<HTMLElement>('[data-bank-questions]')!;
+    const entries = [...questions.querySelectorAll<HTMLAnchorElement>('[data-bank-question]')];
+    const folderButtons = [...folders.querySelectorAll<HTMLButtonElement>('[data-bank-book]')];
+    const empty = bank.querySelector<HTMLElement>('[data-bank-empty]')!;
+    const render = () => {
+      const params = new URL(location.href).searchParams;
+      const activeBook = folderButtons.find(button => button.dataset.bankBook === params.get('book'));
+      const requestedCourse = params.get('course');
+      const course = activeBook?.dataset.bankCourseId ??
+        folderButtons.find(button => button.dataset.bankCourseId === requestedCourse)?.dataset.bankCourseId ?? '';
+      const query = search.value.trim().normalize('NFKC').toLocaleLowerCase();
+      courses.hidden = Boolean(course || query);
+      folders.hidden = !course || Boolean(activeBook || query);
+      questions.hidden = !activeBook && !query;
+      folderButtons.forEach(button => { button.hidden = button.dataset.bankCourseId !== course; });
+      for (const entry of entries) {
+        const inScope = activeBook ? activeBook.dataset.bankBook === entry.dataset.bankQuestion : !course || course === entry.dataset.bankCourseId;
+        entry.hidden = !inScope || !entry.dataset.bankMatch!.normalize('NFKC').toLocaleLowerCase().includes(query);
+      }
+      empty.hidden = questions.hidden || entries.some(entry => !entry.hidden);
+      breadcrumb.replaceChildren();
+      if (course) {
+        const path = document.createElement(activeBook ? 'button' : 'span');
+        if (path instanceof HTMLButtonElement) { path.type = 'button'; path.dataset.bankCourse = course; }
+        path.textContent = course;
+        breadcrumb.append(' / ', path);
+      }
+      if (activeBook) breadcrumb.append(' / ', activeBook.querySelector('strong')!.textContent ?? '');
+    };
+    bank.addEventListener('click', event => {
+      const button = (event.target as Element).closest<HTMLButtonElement>('[data-bank-home], [data-bank-course], [data-bank-book]');
+      if (!button) return;
+      const url = new URL(location.href);
+      url.searchParams.delete('course');
+      url.searchParams.delete('book');
+      if (button.dataset.bankCourse) url.searchParams.set('course', button.dataset.bankCourse);
+      if (button.dataset.bankBook) url.searchParams.set('book', button.dataset.bankBook);
+      if (url.href !== location.href) history.pushState(null, '', url);
+      search.value = '';
+      render();
+    });
+    search.addEventListener('input', render);
+    window.addEventListener('popstate', () => { search.value = ''; render(); });
+    render();
+  }
+</script>

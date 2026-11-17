@@ -44,7 +44,7 @@ export async function getCatalog(): Promise<KnowledgeNode[]> {
   const lectureNodes = entries.filter(entry => entry.data.lecture).flatMap(entry => {
     const lecture = entry.data.lecture!;
     const chapter = getChapter(lecture.chapter)!;
-    return lecture.nodes.map(node => ({ id: node.id, title: node.title, domain: chapter.courseId, chapterId: chapter.id, kind: node.kind, summary: node.summary, requires: node.requires, variants: [], url: sitePath(entry.id + '/') + '#' + node.id, local: false } satisfies KnowledgeNode));
+    return lecture.nodes.map(node => ({ id: node.id, title: node.title, domain: chapter.courseId, chapterId: chapter.id, section: { title: entry.data.title, order: lecture.order }, kind: node.kind, summary: node.summary, requires: node.requires, variants: [], url: sitePath(entry.id + '/') + '#' + node.id, local: false } satisfies KnowledgeNode));
   });
   const all = [...nodes, ...lectureNodes];
   validateGraph(all);

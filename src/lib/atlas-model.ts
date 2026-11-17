@@ -1,10 +1,7 @@
 import { orderedCourses } from '../data/courses.ts';
-export const domains = [
-  ...orderedCourses.map(({ id, title }) => ({ id, title })),
-  { id: 'math', title: '数学工具' },
-] as const;
+export const domains = orderedCourses.map(({ id, title }) => ({ id, title }));
 // 只用于兼容已有个人记录；不再作为地图入口或新建分类。
-export const retiredDomains: readonly string[] = ['waves', 'modern'];
+export const retiredDomains: readonly string[] = ['waves', 'modern', 'math'];
 export const kinds = { concept: '概念', law: '定律', method: '方法', example: '例题' } as const;
 export const statuses = { 'not-started': '未开始', learning: '学习中', mastered: '已掌握' } as const;
 export type Status = keyof typeof statuses;
@@ -12,11 +9,12 @@ export interface KnowledgeNode {
   id: string; title: string; domain: string; kind: keyof typeof kinds; summary: string;
   requires: string[]; variants: { id: string; title: string; requires: string[] }[];
   url?: string; local?: boolean; chapterId?: string;
+  section?: { title: string; order: number };
 }
 export interface LectureItem { nodeId: string; variantId: string; importance: number; placement: 'body' | 'reference'; note: string; }
 export interface Lecture { id: string; title: string; mode: 'student' | 'teacher'; items: LectureItem[]; }
-export interface AtlasState { version: 1; nodes: KnowledgeNode[]; progress: Record<string, Status>; currentNode: string | null; lectures: Lecture[]; activeLecture: string | null; }
-export const freshState = (): AtlasState => ({ version: 1, nodes: [], progress: {}, currentNode: null, lectures: [], activeLecture: null });
+export interface AtlasState { version: 1; nodes: KnowledgeNode[]; progress: Record<string, Status>; currentNode: string | null; lectures: Lecture[]; activeLecture: string | null; practiceBooks: string[]; }
+export const freshState = (): AtlasState => ({ version: 1, nodes: [], progress: {}, currentNode: null, lectures: [], activeLecture: null, practiceBooks: [] });
 export const newId = (prefix: string) => `${prefix}-${crypto.randomUUID()}`;
 export const newItem = (node: KnowledgeNode): LectureItem => ({ nodeId: node.id, variantId: node.variants[0]?.id || '', importance: 2, placement: 'body', note: '' });
 export const allNodes = (published: KnowledgeNode[], state: AtlasState) => [...published, ...state.nodes];
@@ -106,5 +104,6 @@ export function parseState(value: unknown): AtlasState {
     return {id: string(l.id), title: string(l.title, 100), mode: l.mode, items};
   });
   if (new Set(lectures.map(l => l.id)).size !== lectures.length) throw new Error('讲义标识重复。');
-  return { version: 1, nodes, progress, lectures, currentNode: input.currentNode === null ? null : string(input.currentNode), activeLecture: input.activeLecture === null ? null : string(input.activeLecture) };
+  const practiceBooks = input.practiceBooks === undefined ? [] : [...new Set(ids(input.practiceBooks))];
+  return { version: 1, nodes, progress, lectures, practiceBooks, currentNode: input.currentNode === null ? null : string(input.currentNode), activeLecture: input.activeLecture === null ? null : string(input.activeLecture) };
 }

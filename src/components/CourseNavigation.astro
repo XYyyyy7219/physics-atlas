@@ -1,20 +1,45 @@
 ---
 import { orderedCourses } from '../data/courses';
+import { Icon } from '@astrojs/starlight/components';
 import { sitePath } from '../lib/paths';
 import { getChapter } from '../data/chapters';
 const { entry } = Astro.locals.starlightRoute;
 const courseId = entry.data.course || getChapter(entry.data.chapterPage || entry.data.lecture?.chapter)?.courseId || entry.data.atlas?.domain || orderedCourses.find(course => entry.id.startsWith(course.id + '/'))?.id;
+const groups = [
+  [ ['我的书架', 'my-lectures/', 'open-book', 'blue'] ],
+  [ ['图书推荐', 'lectures/', 'star', 'amber'], ['资源中心', 'resources/', 'document', 'teal'] ],
+  [ ['知识库', 'library/', 'analytics', 'violet'], ['题库', 'question-bank/', 'list-format', 'green'] ],
+  [ ['讲义工作台', 'lecture-workbench/', 'pencil', 'blue'] ],
+] as const;
+const practice = entry.id.endsWith('/practice');
+const current = (path: string) => {
+  if (Astro.url.pathname === sitePath(path)) return 'page';
+  if (path === 'my-lectures/' && Astro.url.pathname === sitePath()) return 'location';
+  if ((path === 'lectures/' && courseId && !practice) ||
+      (path === 'question-bank/' && practice) ||
+      (path === 'library/' && entry.id === 'learning-map')) return 'location';
+};
 ---
-<nav class="course-sidebar-nav" aria-label="知识库与课程" data-pagefind-ignore>
-  <details class="knowledge-navigation" open>
-    <summary>知识库<svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><path d="m6 4 4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg></summary>
-    <div class="course-nav-group" role="group" aria-labelledby="course-group-label">
-      <p class="course-nav-label" id="course-group-label">普通物理</p>
-      <ul class="course-nav-list">{orderedCourses.map(course => <li>
-        <a class="course-nav-item" href={sitePath(course.id + '/')} aria-current={course.id === courseId ? (entry.data.course ? 'page' : 'location') : undefined}>{course.title}</a>
-      </li>)}</ul>
-    </div>
-  </details>
-  <a class="course-personal-link" href={sitePath('math/')} aria-current={entry.id.startsWith('math/') ? 'location' : Astro.url.pathname === sitePath('math/') ? 'page' : undefined}>数学工具</a>
-  <a class="course-personal-link" href={sitePath('my-lectures/')} aria-current={Astro.url.pathname === sitePath('my-lectures/') ? 'page' : undefined}>我的讲义</a>
+<nav class="course-sidebar-nav atlas-menu" aria-label="站点导航" data-pagefind-ignore>
+  <div class="atlas-menu-heading"><span>导航</span><button type="button" data-atlas-sidebar-toggle aria-label="收起侧栏" aria-pressed="false" title="收起侧栏">‹</button></div>
+  {groups.map(group => <ul class="atlas-menu-group">{group.map(([label, path, icon, tone]) => <li><a class="atlas-menu-link" href={sitePath(path)} aria-current={current(path)} aria-label={label} title={label}><i class={tone} aria-hidden="true"><Icon name={icon} size="1.1rem" /></i><span>{label}</span></a></li>)}</ul>)}
 </nav>
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('[data-atlas-sidebar-toggle]');
+  if (toggle) {
+    function apply(collapsed: boolean) {
+      document.documentElement.toggleAttribute('data-atlas-sidebar-collapsed', collapsed);
+      const label = collapsed ? '展开侧栏' : '收起侧栏';
+      toggle!.setAttribute('aria-pressed', String(collapsed));
+      toggle!.setAttribute('aria-label', label);
+      toggle!.title = label;
+      toggle!.textContent = collapsed ? '›' : '‹';
+    }
+    try { apply(localStorage.getItem('atlas-sidebar-collapsed') === '1'); } catch {}
+    toggle.addEventListener('click', () => {
+      const collapsed = !document.documentElement.hasAttribute('data-atlas-sidebar-collapsed');
+      apply(collapsed);
+      try { localStorage.setItem('atlas-sidebar-collapsed', collapsed ? '1' : '0'); } catch {}
+    });
+  }
+</script>

@@ -1,0 +1,76 @@
+---
+import 'katex/dist/katex.min.css';
+import { chapterLabel, sectionLabel } from '../../../data/chapters';
+import { getPublishedLectureBooks } from '../../../lib/lectures';
+import { markdownProcessor } from '../../../lib/markdown.mjs';
+import { sitePath } from '../../../lib/paths';
+
+export async function getStaticPaths() {
+  const books = await getPublishedLectureBooks();
+  return books.map(book => ({ params: { book: book.course.id }, props: book }));
+}
+
+type Props = Awaited<ReturnType<typeof getPublishedLectureBooks>>[number];
+const { course, chapters: book } = Astro.props;
+const markdown = await markdownProcessor.createRenderer({ syntaxHighlight: false });
+const origin = 'https://atlas.test';
+const rendered = await Promise.all(book.map(async ({ chapter, sections }) => ({
+  chapter,
+  sections: await Promise.all(sections.map(async section => {
+    const { code } = await markdown.render(section.body ?? '');
+    // Resolve sibling links from the original section's URL after combining the pages.
+    const html = code.replace(/\b(href|src)="(\.{1,2}\/[^"<>]+)"/g, (_match, attr, relative) => {
+      const url = new URL(relative, origin + sitePath(section.id + '/'));
+      return `${attr}="${url.pathname}${url.search}${url.hash}"`;
+    });
+    return { title: section.data.title, order: section.data.lecture!.order, html };
+  })),
+})));
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>{course.title} · 讲义打印预览</title>
+  </head>
+  <body data-pagefind-ignore>
+    <main>
+      <nav aria-label="打印预览">
+        <a href={sitePath(course.id + '/')}>← 返回讲义</a>
+        <button type="button" data-print>打印 / 保存 PDF</button>
+      </nav>
+      <h1>{course.title}讲义</h1>
+      {rendered.map(({ chapter, sections }) => <article>
+        <h2>{chapterLabel(chapter.order)}　{chapter.title}</h2>
+        {sections.map(section => <section class="print-lecture-section">
+          <h3>{sectionLabel(section.order)}　{section.title}</h3>
+          <Fragment set:html={section.html} />
+        </section>)}
+      </article>)}
+    </main>
+  </body>
+</html>
+<script>document.querySelector('[data-print]')?.addEventListener('click', () => window.print());</script>
+<style>
+  :global(body) { margin: 0; color: #192d24; background: #f2f5f0; font: 1rem/1.85 system-ui,sans-serif; }
+  main { max-width: 54rem; margin: 0 auto; padding: 1.4rem; overflow-wrap: break-word; }
+  nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #b8c8be; }
+  nav a { color: #285f48; }
+  button { font: inherit; padding: .3rem .8rem; background: #285f48; color: white; border: 0; border-radius: .35rem; cursor: pointer; }
+  .print-lecture-section { margin-top: 2rem; }
+  .print-lecture-section > h3 { padding-top: 1rem; border-top: 1px solid #b8c8be; font-size: 1.3rem; }
+  .print-lecture-section :global(.node-reading-actions) { display: none; }
+  .print-lecture-section :global(.katex-display) { overflow-x: auto; }
+  .print-lecture-section :global(img) { max-width: 100%; height: auto; }
+  .print-lecture-section :global(th), .print-lecture-section :global(td) { text-align: left; padding: .3rem; border-bottom: 1px solid #b8c8be; }
+  @media print {
+    :global(body) { color: black; background: white; font-size: 10pt; }
+    main { max-width: none; padding: 0; }
+    nav { display: none; }
+    .print-lecture-section + .print-lecture-section { break-before: page; }
+    .print-lecture-section :global(h2), .print-lecture-section :global(h3) { break-after: avoid; }
+    .print-lecture-section :global(.katex-display) { overflow: visible; font-size: .8em; break-inside: avoid; }
+  }
+</style>

@@ -20,10 +20,9 @@ export default defineConfig({
       defaultLocale: 'root',
       locales: { root: { label: '简体中文', lang: 'zh-CN' } },
       favicon: '/favicon.svg',
-      customCss: ['katex/dist/katex.min.css', './src/styles/custom.css', './src/styles/workbench.css', './src/styles/courses.css', './src/styles/lectures.css'],
+      customCss: ['katex/dist/katex.min.css', './src/styles/custom.css', './src/styles/workbench.css', './src/styles/courses.css', './src/styles/lectures.css', './src/styles/atlas-shell.css'],
       components: {
-        SiteTitle: './src/components/SiteTitle.astro',
-        SocialIcons: './src/components/HeaderLinks.astro',
+        Header: './src/components/AtlasHeader.astro',
         Hero: './src/components/AtlasHero.astro',
         Footer: './src/components/Footer.astro',
         Sidebar: './src/components/AtlasSidebar.astro',

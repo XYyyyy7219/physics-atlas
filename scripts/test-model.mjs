@@ -4,6 +4,34 @@ import { freshState, parseState, validateGraph, prerequisitePlan, completePrereq
 import { courses } from '../src/data/courses.ts';
 import { chapters } from '../src/data/chapters.ts';
 import { validateOutline, validateChapterAssignment } from '../src/lib/course-outline.ts';
+import { createLectureLayout } from '../src/lib/lecture-forces.ts';
+
+test('拖动讲义节点会带动章和其他小节，松手后平稳停止', () => {
+  const course = { kind: 'root', x: 0, y: 0 };
+  const chapter = { kind: 'chapter', x: 220, y: 0 };
+  const held = { kind: 'section', x: 365, y: -100 };
+  const sibling = { kind: 'section', x: 365, y: 100 };
+  const bodies = [course, chapter, held, sibling];
+  const links = [{ source: course, target: chapter }, { source: chapter, target: held }, { source: chapter, target: sibling }];
+  const sim = createLectureLayout(bodies, links).tick(300);
+  const prior = bodies.map(node => ({ x: node.x, y: node.y }));
+
+  held.fx = held.x;
+  held.fy = held.y + 145;
+  sim.alpha(.3).alphaTarget(.2).tick(35);
+  assert.equal(held.y, held.fy, '拖动时由指针定位');
+  for (const node of [course, chapter, sibling]) {
+    const from = prior[bodies.indexOf(node)];
+    assert.ok(Math.hypot(node.x - from.x, node.y - from.y) > 6, `${node.kind} 受到拖拽`);
+  }
+
+  const releaseY = held.y;
+  held.fx = held.fy = null;
+  sim.alphaTarget(0).tick(300);
+  assert.ok(Math.abs(held.y - releaseY) > 5, '松手后不再固定');
+  assert.ok(sim.alpha() < sim.alphaMin());
+  assert.ok(bodies.every(node => Number.isFinite(node.x) && Number.isFinite(node.y)));
+});
 
 test('课程目录拒绝重复路径、缺失课程、缺失前置与循环', () => {
   assert.doesNotThrow(() => validateOutline());
