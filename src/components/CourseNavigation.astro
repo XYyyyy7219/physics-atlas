@@ -15,5 +15,6 @@ const courseId = entry.data.course || getChapter(entry.data.chapterPage || entry
       </li>)}</ul>
     </div>
   </details>
+  <a class="course-personal-link" href={sitePath('math/')} aria-current={entry.id.startsWith('math/') ? 'location' : Astro.url.pathname === sitePath('math/') ? 'page' : undefined}>数学工具</a>
   <a class="course-personal-link" href={sitePath('my-lectures/')} aria-current={Astro.url.pathname === sitePath('my-lectures/') ? 'page' : undefined}>我的讲义</a>
 </nav>
