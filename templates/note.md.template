@@ -1,0 +1,22 @@
+---
+title: 在这里填写标题
+description: 在这里填写一句话简介
+sidebar:
+  order: 1
+atlas:
+  id: unique-note-id
+  domain: mechanics
+  kind: concept
+  requires: []
+  variants: []
+---
+
+在这里填写导语。
+
+## 第一部分
+
+在这里填写正文。
+
+## 第二部分
+
+在这里继续填写正文。

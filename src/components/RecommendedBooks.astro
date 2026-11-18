@@ -1,0 +1,45 @@
+---
+import LectureBookCover from './LectureBookCover.astro';
+import ReadingFrame from './ReadingFrame.astro';
+import { sitePath } from '../lib/paths';
+import { getPracticeBooks } from '../lib/practice-books';
+import { getPublishedLectureBooks } from '../lib/lectures';
+const [lectureBooks, books] = await Promise.all([getPublishedLectureBooks(), getPracticeBooks()]);
+---
+<ReadingFrame>
+  <div class="atlas-recommend" data-recommend>
+    <nav class="atlas-view-tabs" aria-label="图书类型">
+      <a href="#lectures" aria-current="location" data-book-tab>讲义</a>
+      <a href="#workbooks" data-book-tab>题目册</a>
+    </nav>
+    <section id="lectures" aria-label="推荐讲义" data-book-panel>
+      <div class="atlas-books-grid">
+        {lectureBooks.map(({ course, chapters }) => <a class="atlas-book-card" href={sitePath(course.id + '/')}>
+          <LectureBookCover course={course} />
+          <div class="atlas-book-caption"><strong>{course.title}</strong><span>{chapters.length} 章 · {chapters.reduce((count, chapter) => count + chapter.sections.length, 0)} 节</span></div>
+        </a>)}
+      </div>
+    </section>
+    <section id="workbooks" aria-label="推荐题目册" data-book-panel>
+      <div class="atlas-books-grid">
+        {books.map(book => <div class="atlas-book-entry"><a class="atlas-book-card" href={book.url}>
+          <div class="atlas-personal-cover is-practice" aria-hidden="true"><small>PHYSICS ATLAS</small><strong>{book.title}</strong><i></i></div>
+          <div class="atlas-book-caption"><strong>{book.title}</strong><span>{book.questions.length} 道题 · 附解答</span></div>
+        </a><button type="button" class="atlas-button" data-action="save-practice" data-id={book.id}>添加到我的书架</button></div>)}
+      </div>
+    </section>
+  </div>
+</ReadingFrame>
+<script>
+  const root = document.querySelector('[data-recommend]');
+  const update = () => {
+    const active = location.hash === '#workbooks' ? 'workbooks' : 'lectures';
+    root?.querySelectorAll<HTMLElement>('[data-book-panel]').forEach(panel => { panel.hidden = panel.id !== active; });
+    root?.querySelectorAll<HTMLAnchorElement>('[data-book-tab]').forEach(tab => {
+      if (tab.hash === '#' + active) tab.setAttribute('aria-current', 'location');
+      else tab.removeAttribute('aria-current');
+    });
+  };
+  window.addEventListener('hashchange', update);
+  update();
+</script>

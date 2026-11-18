@@ -1,0 +1,52 @@
+import { getCollection } from 'astro:content';
+import { validateGraph, type KnowledgeNode } from './atlas-model';
+import { sitePath } from './paths';
+import { validateChapterAssignment } from './course-outline';
+import { getChapter } from '../data/chapters';
+import { markdownProcessor } from './markdown.mjs';
+
+export interface NodeReview {
+  label: string;
+  question: string;
+  review: string;
+}
+
+let nodeReviews: Promise<Record<string, NodeReview>> | undefined;
+export function getNodeReviews() {
+  return nodeReviews ??= renderNodeReviews();
+}
+
+async function renderNodeReviews() {
+  const entries = await getCollection('docs');
+  const renderer = await markdownProcessor.createRenderer({ syntaxHighlight: false });
+  const nodes = entries.flatMap(entry => entry.data.lecture?.nodes ?? []);
+  const reviews = await Promise.all(nodes.map(async node => [
+    node.id,
+    {
+      label: node.label,
+      question: (await renderer.render(node.summary)).code,
+      review: (await renderer.render(node.quickReview)).code,
+    },
+  ] as const));
+  return Object.fromEntries(reviews);
+}
+
+export async function getCatalog(): Promise<KnowledgeNode[]> {
+  const entries = await getCollection('docs');
+  const nodes = entries.filter(e => e.data.atlas).map(e => {
+    const meta = e.data.atlas!;
+    validateChapterAssignment(meta.domain, meta.chapter);
+    return { id: meta.id, title: e.data.title, domain: meta.domain, kind: meta.kind,
+      summary: e.data.description || '', requires: meta.requires, variants: meta.variants,
+      url: sitePath(e.id.replace(/\/index$/, '') + '/'), local: false, chapterId: meta.chapter,
+    } satisfies KnowledgeNode;
+  });
+  const lectureNodes = entries.filter(entry => entry.data.lecture).flatMap(entry => {
+    const lecture = entry.data.lecture!;
+    const chapter = getChapter(lecture.chapter)!;
+    return lecture.nodes.map(node => ({ id: node.id, title: node.title, domain: chapter.courseId, chapterId: chapter.id, section: { title: entry.data.title, order: lecture.order }, kind: node.kind, summary: node.summary, requires: node.requires, variants: [], url: sitePath(entry.id + '/') + '#' + node.id, local: false } satisfies KnowledgeNode));
+  });
+  const all = [...nodes, ...lectureNodes];
+  validateGraph(all);
+  return all;
+}

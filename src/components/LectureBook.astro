@@ -1,0 +1,83 @@
+---
+import { getCourse } from '../data/courses';
+import { chapterAnchor, chapterLabel, sectionLabel } from '../data/chapters';
+import { getLectureBook } from '../lib/lectures';
+import { sitePath } from '../lib/paths';
+import LectureOutlineGraph from './LectureOutlineGraph.astro';
+import ReadingFrame from './ReadingFrame.astro';
+import LectureBookCover from './LectureBookCover.astro';
+
+const { courseId } = Astro.props as { courseId: string };
+const course = getCourse(courseId)!;
+const book = await getLectureBook(courseId);
+const sections = book.flatMap(group => group.sections);
+const first = sections[0];
+const inFocus = (id: string) => sitePath(id + '/') + '?read=1';
+const saveableChapter = book.length === 1 ? book[0].chapter : undefined;
+const nodeIds = sections.flatMap(section => section.data.lecture!.nodes.map(node => node.id));
+---
+
+<ReadingFrame>
+  <div class="lecture-book">
+    <nav class="course-breadcrumbs" aria-label="面包屑"><a href={sitePath()}>ATLAS</a><span aria-hidden="true">/</span><a href={sitePath('lectures/')}>图书推荐</a><span aria-hidden="true">/</span><span aria-current="page">课程讲义详情</span></nav>
+    <div class="book-hero">
+      <LectureBookCover course={course} />
+      <div class="book-intro">
+        <div>
+          <h1 id="_top">{course.title}</h1>
+          <p class="book-description">{course.description}</p>
+        </div>
+        <nav class="book-actions" aria-label="讲义操作">
+          {first && <a class="atlas-button primary" href={inFocus(first.id)}>阅读讲义</a>}
+          <a class="atlas-button" href="#讲义大纲与章节目录">查看大纲</a>
+          <a class="atlas-button" href={sitePath(courseId + '/print/')}>打印讲义</a>
+          {saveableChapter && <button class="atlas-button" type="button" data-action="save-chapter" data-id={saveableChapter.id} data-chapter-title={saveableChapter.title} data-chapter-nodes={JSON.stringify(nodeIds)}>添加到我的书架</button>}
+        </nav>
+      </div>
+    </div>
+
+    <div class="book-info">
+      <section>
+        <h2>讲义概要</h2>
+        <dl><div><dt>已收录</dt><dd>{book.length} 章 · {sections.length} 节</dd></div><div><dt>知识节点</dt><dd>{nodeIds.length} 个</dd></div></dl>
+      </section>
+      <section>
+        <h2>学习指引</h2>
+        <p>{book[0]?.chapter.summary || course.goal}</p>
+        {book[0]?.chapter.practicePage && <a href={sitePath(book[0].chapter.practicePage)}>复习第一章练习 →</a>}
+      </section>
+    </div>
+
+    <LectureOutlineGraph title={course.title} groups={book.map(({ chapter, sections }) => ({
+      id: chapter.id, label: `${chapterLabel(chapter.order)} ${chapter.title}`, order: chapter.order,
+      sections: sections.map(section => ({ id: section.id, label: section.data.title, number: sectionLabel(section.data.lecture!.order), order: section.data.lecture!.order, url: inFocus(section.id) })),
+    }))} />
+
+    <section class="book-outline" aria-labelledby="讲义大纲与章节目录" data-book-outline>
+      <header class="book-section-heading">
+        <h2 id="讲义大纲与章节目录">讲义大纲与章节目录</h2>
+        <div class="book-outline-tools"><span>{book.length} 章 · {sections.length} 节</span><button type="button" data-outline-toggle="open">全部展开</button><button type="button" data-outline-toggle="close">全部折叠</button></div>
+      </header>
+      {book.map(({ chapter, sections }) => <details class="book-chapter" id={chapterAnchor(chapter)} open>
+        <summary><strong>{chapterLabel(chapter.order)}　{chapter.title}</strong><span>{sections.length} 节 <i aria-hidden="true"></i></span></summary>
+        <a class="book-outline-row" href={sitePath(chapter.page!)}><span class="book-section-num">导读</span><span>本章导读与知识节点</span><span aria-hidden="true">→</span></a>
+        {sections.map(section => <a class="book-outline-row" href={inFocus(section.id)}><span class="book-section-num">{sectionLabel(section.data.lecture!.order)}</span><span>{section.data.title}</span><span aria-hidden="true">→</span></a>)}
+      </details>)}
+    </section>
+  </div>
+</ReadingFrame>
+
+<script>
+  const outline = document.querySelector('[data-book-outline]');
+  outline?.addEventListener('click', event => {
+    if (!(event.target instanceof Element)) return;
+    const toggle = event.target.closest<HTMLButtonElement>('[data-outline-toggle]');
+    if (toggle) outline.querySelectorAll('details').forEach(chapter => { chapter.open = toggle.dataset.outlineToggle === 'open'; });
+  });
+  const openChapterFromHash = () => {
+    const match = [...(outline?.querySelectorAll('details') ?? [])].find(chapter => '#' + chapter.id === location.hash);
+    if (match) match.open = true;
+  };
+  window.addEventListener('hashchange', openChapterFromHash);
+  openChapterFromHash();
+</script>

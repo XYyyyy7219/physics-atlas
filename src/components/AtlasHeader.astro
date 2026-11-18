@@ -1,0 +1,16 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
+import SiteTitle from './SiteTitle.astro';
+import AtlasSearch from './AtlasSearch.astro';
+import { sitePath } from '../lib/paths';
+---
+<div class="atlas-topbar">
+  <SiteTitle />
+  <div class="atlas-topbar-search"><AtlasSearch /></div>
+  <nav class="atlas-topbar-actions" aria-label="站点工具">
+    <a href={sitePath('start/roadmap/')} aria-label="学习路线" title="学习路线"><Icon name="open-book" size="1.25rem" /></a>
+    <a href={sitePath('start/welcome/')} aria-label="帮助" title="帮助"><Icon name="question-circle" size="1.25rem" /></a>
+    <ThemeSelect />
+  </nav>
+</div>

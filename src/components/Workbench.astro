@@ -1,0 +1,9 @@
+---
+interface Props { view: 'map' | 'lectures' | 'library' | 'editor'; domain?: string; }
+const { view, domain = '' } = Astro.props;
+---
+<div class="atlas-workbench" data-atlas-app data-view={view} data-domain={domain} data-pagefind-ignore>
+  <div class="workbench-notice" role="status" data-atlas-notice aria-live="polite"></div>
+  <div data-atlas-screen><p>正在打开你的学习空间…</p></div>
+  <noscript>请启用浏览器 JavaScript，以使用个人讲义与学习地图；知识库文章仍可正常阅读。</noscript>
+</div>

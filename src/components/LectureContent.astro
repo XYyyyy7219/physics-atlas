@@ -1,0 +1,58 @@
+---
+import DefaultMarkdownContent from '@astrojs/starlight/components/MarkdownContent.astro';
+import ReadingFrame from './ReadingFrame.astro';
+import ChapterReadingNav from './ChapterReadingNav.astro';
+import { chapterAnchor, getChapter, sectionLabel } from '../data/chapters';
+import { getLectures } from '../lib/lectures';
+import { sitePath } from '../lib/paths';
+const lecture = Astro.locals.starlightRoute.entry.data.lecture;
+const chapter = getChapter(lecture?.chapter);
+const entries = lecture ? await getLectures(lecture.chapter) : [];
+const previous = entries.find(entry => entry.data.lecture!.order === (lecture?.order || 0)-1);
+const next = entries.find(entry => entry.data.lecture!.order === (lecture?.order || 0)+1);
+---
+<DefaultMarkdownContent>{lecture ? <ReadingFrame>
+  <nav class="lecture-focus-toolbar" aria-label="阅读模式" data-pagefind-ignore>
+    <a href={sitePath(chapter!.courseId + '/') + '#' + chapterAnchor(chapter!)}>← 讲义大纲</a>
+    <div class="lecture-reader-controls">
+      {previous && <a data-reader-section href={sitePath(previous.id + '/')} aria-label={'上一节：' + previous.data.title}>上一节</a>}
+      <span>{sectionLabel(lecture.order)} / {entries.length} 节</span>
+      {next && <a data-reader-section href={sitePath(next.id + '/')} aria-label={'下一节：' + next.data.title}>下一节</a>}
+    </div>
+    <button type="button" class="atlas-button" data-reader-mode aria-pressed="false" hidden>专注阅读</button>
+  </nav>
+  <details class="lecture-reader-outline" data-pagefind-ignore>
+    <summary>展开本章目录</summary>
+    <ChapterReadingNav chapterId={lecture.chapter} sectionOrder={lecture.order} />
+  </details>
+  <slot />
+  <nav class="lecture-reading-pagination" aria-label="讲义翻页">{previous && <a data-reader-section href={sitePath(previous.id+'/')}>← {sectionLabel(previous.data.lecture!.order)} {previous.data.title}</a>}<a href={sitePath(chapter!.page!)}>返回本章知识库</a>{next && <a data-reader-section href={sitePath(next.id+'/')}>{sectionLabel(next.data.lecture!.order)} {next.data.title} →</a>}</nav>
+</ReadingFrame> : <slot />}</DefaultMarkdownContent>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('[data-reader-mode]');
+  if (toggle) {
+    const links = document.querySelectorAll<HTMLAnchorElement>('[data-reader-section], .lecture-workspace a[href^="../section-"]');
+    const applyMode = () => {
+      const focus = new URL(location.href).searchParams.get('read') === '1';
+      document.documentElement.toggleAttribute('data-lecture-focus', focus);
+      toggle.hidden = false;
+      toggle.textContent = focus ? '退出专注阅读' : '专注阅读';
+      toggle.setAttribute('aria-pressed', String(focus));
+      links.forEach(link => {
+        const url = new URL(link.href);
+        if (focus) url.searchParams.set('read', '1');
+        else url.searchParams.delete('read');
+        link.href = url.pathname + url.search + url.hash;
+      });
+    };
+    toggle.addEventListener('click', () => {
+      const url = new URL(location.href);
+      if (url.searchParams.get('read') === '1') url.searchParams.delete('read');
+      else url.searchParams.set('read', '1');
+      history.replaceState(history.state, '', url);
+      applyMode();
+    });
+    applyMode();
+  }
+</script>

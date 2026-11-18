@@ -1,0 +1,27 @@
+node_modules/
+dist/
+.astro/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.npm-cache/
+.netlify/
+.cache/
+coverage/
+*.tsbuildinfo
+*.zip
+*.pem
+*.key
+*.p12
+*.pfx
+.secrets/
+private-materials/
+
+# 教材、教师课件等原始材料默认不随网站源码上传。
+*.pdf
+*.ppt
+*.pptx
+*.doc
+*.docx

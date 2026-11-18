@@ -1,0 +1,15 @@
+---
+import DefaultPageTitle from '@astrojs/starlight/components/PageTitle.astro';
+import { getCourse } from '../data/courses';
+import { sitePath } from '../lib/paths';
+import { getChapter, chapterLabel, sectionLabel } from '../data/chapters';
+const { entry } = Astro.locals.starlightRoute;
+const data = entry.data;
+const chapter = getChapter(data.chapterPage || data.lecture?.chapter);
+const course = getCourse(data.course || chapter?.courseId);
+const isHome = Astro.url.pathname === sitePath();
+const isWorkspace = isHome || ['my-lectures', 'library', 'lectures', 'learning-map', 'resources', 'question-bank', 'lecture-workbench'].includes(entry.id);
+---
+{isWorkspace ? <div class="atlas-page-bar"><a href={sitePath()}>ATLAS</a><span aria-hidden="true">/</span><h1 id="_top">{isHome ? '我的书架' : data.title}</h1></div> :
+data.lectureBook ? null : course ? <div class="course-page-heading"><nav class="course-breadcrumbs" aria-label="面包屑"><a href={sitePath()}>物理图谱</a><span aria-hidden="true">/</span>{chapter ? <><a href={sitePath(course.id+'/')}>{course.title}</a><span aria-hidden="true">/</span>{data.lecture ? <a href={sitePath(chapter.page!)}>{chapterLabel(chapter.order)} {chapter.title}</a> : <span aria-current="page">{chapterLabel(chapter.order)}</span>}</> : <span aria-current="page">{course.title}</span>}</nav><p class="eyebrow">{data.lecture ? sectionLabel(data.lecture.order) : chapter ? chapterLabel(chapter.order) : 'GENERAL PHYSICS'} · {course.en}</p><h1 id="_top">{data.lecture ? data.title : chapter ? chapter.title : course.title}</h1></div> : <DefaultPageTitle />
+}

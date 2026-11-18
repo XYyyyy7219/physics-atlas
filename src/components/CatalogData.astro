@@ -1,0 +1,8 @@
+---
+import { getCatalog } from '../lib/catalog';
+import { getPracticeBooks } from '../lib/practice-books';
+const [catalog, books] = await Promise.all([getCatalog(), getPracticeBooks()]);
+const practiceBooks = books.map(({ id, title, url, questions }) => ({ id, title, url, count: questions.length }));
+---
+<script type="application/json" data-atlas-catalog set:html={JSON.stringify(catalog).replace(/</g, '\\u003c')} />
+<script type="application/json" data-atlas-practice-books set:html={JSON.stringify(practiceBooks).replace(/</g, '\\u003c')} />

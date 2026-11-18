@@ -1,0 +1,9 @@
+---
+import { getCollection } from 'astro:content';
+import { categories } from '../data/categories';
+import { sitePath } from '../lib/paths';
+const notes = (await getCollection('docs')).filter(p => categories.some(c => p.id.startsWith(c.id + '/') && !p.id.endsWith('/index'))).sort((a,b)=>a.data.title.localeCompare(b.data.title, 'zh-CN')).slice(0,3);
+---
+<div class="reading-list"><div class="section-heading"><div><p class="eyebrow">ROOM FOR NEW IDEAS</p><h2>图谱笔记</h2></div><a href={sitePath('lectures/')}>专题讲义 <span aria-hidden="true">→</span></a></div>
+{notes.length ? notes.map((note, i)=><a class="reading-row" href={sitePath(note.id + '/')}><span class="reading-number">{String(i+1).padStart(2,'0')}</span><div><h3>{note.data.title}</h3><p>{note.data.description}</p></div><span class="card-arrow" aria-hidden="true">↗</span></a>) : <div class="home-empty"><span class="empty-lines" aria-hidden="true">≡</span><h3>下一篇笔记，从一个好问题开始。</h3><p>图谱已就位，内容将随探索慢慢生长。</p><span class="empty-badge">等待第一篇笔记</span></div>}
+</div>

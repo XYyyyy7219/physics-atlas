@@ -1,0 +1,18 @@
+---
+import DefaultFooter from '@astrojs/starlight/components/Footer.astro';
+import CatalogData from './CatalogData.astro';
+import { sitePath } from '../lib/paths';
+const { entry } = Astro.locals.starlightRoute;
+const isWorkbench = ['', 'index', 'library', 'my-lectures', 'learning-map', 'lecture-workbench', 'lectures', 'resources', 'question-bank'].includes(entry.id);
+const isCourse = Boolean(Astro.locals.starlightRoute.entry.data.course || Astro.locals.starlightRoute.entry.data.chapterPage || Astro.locals.starlightRoute.entry.data.lecture);
+---
+{Astro.locals.starlightRoute.entry.data.template !== 'splash' && !isWorkbench && !isCourse && <DefaultFooter><slot /></DefaultFooter>}
+{!isWorkbench && <div class="atlas-footer"><span><strong>Physics Atlas</strong></span><a href={sitePath('start/welcome/')}>关于图谱</a></div>}
+<input data-atlas-import type="file" accept="application/json,.json" hidden aria-label="导入个人备份" />
+<div class="atlas-global-notice" data-atlas-global-notice role="status" aria-live="polite" data-pagefind-ignore></div>
+<dialog class="atlas-dialog atlas-workbench" data-atlas-dialog aria-labelledby="atlas-dialog-heading" data-pagefind-ignore>
+  <div data-atlas-modal></div>
+  <p class="dialog-notice" role="status" data-atlas-dialog-notice></p>
+</dialog>
+<CatalogData />
+<script>import '../scripts/atlas-workbench';</script>

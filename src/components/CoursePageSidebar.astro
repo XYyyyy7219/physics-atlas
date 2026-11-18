@@ -1,0 +1,9 @@
+---
+import DefaultPageSidebar from '@astrojs/starlight/components/PageSidebar.astro';
+import CourseChapterNav from './CourseChapterNav.astro';
+import ChapterReadingNav from './ChapterReadingNav.astro';
+const data = Astro.locals.starlightRoute.entry.data;
+const courseId = data.course;
+const chapterId = data.chapterPage || data.lecture?.chapter;
+---
+{chapterId ? <ChapterReadingNav chapterId={chapterId} sectionOrder={data.lecture?.order} /> : courseId ? <CourseChapterNav courseId={courseId} /> : <DefaultPageSidebar />}
